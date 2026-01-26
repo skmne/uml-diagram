@@ -1,0 +1,49 @@
+{
+  "name": "@your-username/uml-diagram",
+  "version": "0.1.0",
+  "description": "A lightweight JavaScript library for rendering interactive UML class diagrams using D3.js",
+  "main": "dist/main.js",
+  "module": "dist/main.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "webpack --mode production",
+    "build:dev": "webpack --mode development",
+    "watch": "webpack --mode development --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "uml",
+    "diagram",
+    "class-diagram",
+    "visualization",
+    "d3",
+    "svg",
+    "interactive",
+    "graph"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/uml-diagram.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/uml-diagram/issues"
+  },
+  "homepage": "https://github.com/your-username/uml-diagram#readme",
+  "devDependencies": {
+    "webpack": "^5.87.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "d3": "^7.8.5",
+    "lodash": "^4.17.21"
+  },
+  "peerDependencies": {
+    "d3": "^7.0.0"
+  }
+}

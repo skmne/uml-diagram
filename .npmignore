@@ -1,0 +1,30 @@
+# Source files (only dist should be published)
+src/
+webpack.config.js
+package-lock.json
+
+# Development files
+examples/
+*.md
+!README.md
+
+# Testing
+test/
+tests/
+*.test.js
+*.spec.js
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Development tools
+.eslintrc*
+.prettierrc*
+tsconfig.json
+
+# Documentation (keep only README.md)
+MIGRATION_PLAN.md
+STRUCTURE.md
+QUICK_START.md

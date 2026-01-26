@@ -1,0 +1,453 @@
+var header = document.getElementById("header").getBoundingClientRect();
+var svgContainer = document.getElementById("container").getBoundingClientRect();
+var width = svgContainer.width;
+var height = svgContainer.height - header.height;
+const svgElement = document.querySelector("#uml-diagram");
+let vscodeAPI;
+
+if (typeof acquireVsCodeApi === "function") {
+	vscodeAPI = acquireVsCodeApi();
+}
+
+setSvgSize(svgElement, width, height);
+window.addEventListener(
+	"resize",
+	(event) => {
+		header = document.getElementById("header").getBoundingClientRect();
+		svgContainer = document.getElementById("container").getBoundingClientRect();
+		width = svgContainer.width;
+		height = svgContainer.height - header.height;
+		setSvgSize(svgElement, width, height);
+	},
+	true
+);
+
+function setSvgSize(svgElement, width, height) {
+	if (svgElement) {
+		svgElement.setAttribute("width", width);
+		svgElement.setAttribute("height", height);
+	}
+}
+
+const diagram = new MyLibrary.default(svgElement);
+
+diagram.setStyle({
+	nodeForeground: "var(--vscode-editor-foreground)",
+	nodeBackground: "var(--vscode-editor-background)",
+	fontFamily: "var(--vscode-font-family)",
+	fontSize: "12px",
+	fontColor: "var(--vscode-editor-foreground)",
+	nodeWidth: 200,
+});
+// diagram.setData(getData());
+
+diagram.build();
+
+// Handle the message inside the webview
+window.addEventListener("message", (event) => {
+	const message = event.data; // The JSON data our extension sent
+	console.log(message);
+	switch (message.command) {
+		case "Add":
+			console.log("add");
+			console.log(message.value);
+			diagram.addItems(message.value);
+			break;
+		case "Remove":
+			console.log("remove");
+			diagram.removeItems(message.value);
+			break;
+	}
+});
+
+document.getElementById("add").addEventListener("click", () => {
+	console.log("add");
+	let newDataMock = {
+		nodes: [
+			{
+				namespace: null,
+				name: "fflib_Constructor NEW",
+				id: "fflib_Constructor_NEW",
+				width: 300,
+				height: 500,
+			},
+			{
+				namespace: null,
+				name: "fflib_Selector NEW",
+				id: "fflib_Selector_New",
+				height: 100,
+				width: 450,
+			},
+		],
+		links: [
+			{
+				source: "fflib_Constructor_NEW",
+				target: "fflib_Selector_New",
+				type: "Realization",
+			},
+		],
+	};
+	diagram.addItems(newDataMock);
+});
+
+document.getElementById("remove").addEventListener("click", () => {
+	console.log("remove");
+	diagram.removeItems(["fflib_Selector_New", "fflib_Constructor_NEW"]);
+});
+
+document.getElementById("zoomIn").addEventListener("click", (e) => {
+	console.log("zoomIn");
+	diagram.getZoom().zoomIn();
+});
+
+document.getElementById("zoomOut").addEventListener("click", () => {
+	console.log("zoomOut");
+	diagram.getZoom().zoomOut();
+});
+
+document.getElementById("resetZoom").addEventListener("click", () => {
+	console.log("resetZoom");
+	diagram.getZoom().resetZoom();
+});
+
+document.addEventListener("keydown", function (event) {
+	switch (event.keyCode) {
+		case 65: // 'A'
+			diagram.getZoom().panLeft();
+			break;
+		case 83: // 'S'
+			diagram.getZoom().panDown();
+			break;
+		case 68: // 'D'
+			diagram.getZoom().panRight();
+			break;
+		case 87: // 'W'
+			diagram.getZoom().panUp();
+			break;
+		case 32: // spacebar
+			diagram.getZoom().center();
+			break;
+	}
+});
+
+document.getElementById("export").addEventListener("click", () => {
+	console.log("export");
+
+	if (vscodeAPI) {
+		const svgString = getSVGText();
+		vscodeAPI.postMessage({
+			command: "export",
+			text: svgString,
+		});
+	} else {
+		exportSvg();
+	}
+});
+
+function exportSvg() {
+	// Get the SVG content as a string
+	const svgString = getSVGText();
+	const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+
+	const link = document.createElement("a");
+	link.href = URL.createObjectURL(blob);
+	link.download = "exported-svg.svg";
+	link.click();
+}
+
+function exportToPng() {
+	// var svgElement = document.getElementById("d3-container").firstChild;
+
+	// Create a canvas element
+	var canvas = document.createElement("canvas");
+	canvas.width = svgElement.clientWidth;
+	canvas.height = svgElement.clientHeight;
+
+	// Get the 2D rendering context
+	var ctx = canvas.getContext("2d");
+
+	// Draw the SVG onto the canvas
+	var img = new Image();
+	img.onload = function () {
+		ctx.drawImage(img, 0, 0);
+
+		// Convert the canvas to a data URL
+		var dataUrl = canvas.toDataURL("image/png");
+
+		// Create a download link and trigger a click to download the PNG
+		var link = document.createElement("a");
+		link.href = dataUrl;
+		link.download = "exported-d3.png";
+		link.click();
+	};
+
+	var svgData = getSVGText();
+	img.src = "data:image/svg+xml," + encodeURIComponent(svgData);
+}
+
+function getSVGText() {
+	const serializer = new XMLSerializer();
+	return serializer.serializeToString(svgElement);
+}
+
+function getData() {
+	return {
+		nodes: [
+			{
+				namespace: null,
+				name: "fflib_IDomainConstructor",
+				id: "fflib_IDomainConstructor",
+				group: 1,
+			},
+			{
+				namespace: null,
+				name: "fflib_ISObjectSelector",
+				id: "fflib_ISObjectSelector",
+				group: 1,
+			},
+			{
+				namespace: null,
+				name: "fflib_IObjects",
+				id: "fflib_IObjects",
+				group: 1,
+			},
+			{
+				namespace: null,
+				name: "fflib_IServiceFactory",
+				id: "fflib_IServiceFactory",
+			},
+			{
+				namespace: null,
+				name: "fflib_StringBuilder",
+				id: "fflib_StringBuilder",
+			},
+			{
+				namespace: null,
+				name: "fflib_Objects",
+				id: "fflib_Objects",
+			},
+			{
+				namespace: null,
+				name: "fflib_ISObjectUnitOfWork",
+				id: "fflib_ISObjectUnitOfWork",
+			},
+			{
+				namespace: null,
+				name: "fflib_SObjectSelector",
+				id: "fflib_SObjectSelector",
+			},
+			{
+				namespace: null,
+				name: "BaseApexClass",
+				id: "BaseApexClass",
+			},
+			{
+				namespace: null,
+				name: "fflib_ISObjects",
+				id: "fflib_ISObjects",
+			},
+			{
+				namespace: null,
+				name: "fflib_Application",
+				id: "fflib_Application",
+			},
+			{
+				namespace: null,
+				name: "fflib_ISelectorFactory",
+				id: "fflib_ISelectorFactory",
+			},
+			{
+				namespace: null,
+				name: "ApexClass",
+				id: "ApexClass",
+			},
+			{
+				namespace: null,
+				name: "BoatDataService",
+				id: "BoatDataService",
+			},
+			{
+				namespace: null,
+				name: "GenerateDataTests",
+				id: "GenerateDataTests",
+			},
+			{
+				namespace: null,
+				name: "fflib_SObjectDescribe",
+				id: "fflib_SObjectDescribe",
+			},
+			{
+				namespace: null,
+				name: "fflib_SObjectDomain",
+				id: "fflib_SObjectDomain",
+			},
+			{
+				namespace: null,
+				name: "fflib_SObjectUnitOfWork",
+				id: "fflib_SObjectUnitOfWork",
+			},
+			{
+				namespace: null,
+				name: "SimilarBoatsControllerTest",
+				id: "SimilarBoatsControllerTest",
+			},
+			{
+				namespace: null,
+				name: "fflib_ISObjectDomain",
+				id: "fflib_ISObjectDomain",
+			},
+			{
+				namespace: null,
+				name: "BoatDataServiceTest",
+				id: "BoatDataServiceTest",
+			},
+			{
+				namespace: null,
+				name: "fflib_QueryFactory",
+				id: "fflib_QueryFactory",
+			},
+			{
+				namespace: null,
+				name: "fflib_IDomain",
+				id: "fflib_IDomain",
+			},
+			{
+				namespace: null,
+				name: "GenerateData",
+				id: "GenerateData",
+			},
+			{
+				namespace: null,
+				name: "IApexClass",
+				id: "IApexClass",
+			},
+			{
+				namespace: null,
+				name: "SimilarBoatsController",
+				id: "SimilarBoatsController",
+			},
+			{
+				namespace: null,
+				name: "fflib_SecurityUtils",
+				id: "fflib_SecurityUtils",
+			},
+			{
+				namespace: null,
+				name: "fflib_IDomainFactory",
+				id: "fflib_IDomainFactory",
+			},
+			{
+				namespace: null,
+				name: "fflib_IUnitOfWorkFactory",
+				id: "fflib_IUnitOfWorkFactory",
+			},
+			{
+				namespace: null,
+				name: "fflib_SObjects",
+				id: "fflib_SObjects",
+			},
+		],
+		links: [
+			{
+				source: "fflib_IDomainConstructor",
+				target: "fflib_ISObjectSelector",
+				type: "Directed Association",
+			},
+			{
+				source: "fflib_ISObjectSelector",
+				target: "fflib_IObjects",
+				type: "Realization",
+			},
+			{
+				source: "fflib_IObjects",
+				target: "fflib_IDomainConstructor",
+				type: "Directed Association",
+			},
+			{
+				source: "fflib_IDomainConstructor",
+				target: "fflib_IObjects",
+				type: "Directed Association",
+			},
+			{
+				source: "fflib_IUnitOfWorkFactory",
+				target: "fflib_ISObjectSelector",
+				type: "Inheritance",
+			},
+			{
+				source: "fflib_IUnitOfWorkFactory",
+				target: "fflib_SecurityUtils",
+				type: "Inheritance",
+			},
+			{
+				source: "fflib_SecurityUtils",
+				target: "GenerateData",
+				type: "Inheritance",
+			},
+			{
+				source: "GenerateData",
+				target: "IApexClass",
+				type: "Inheritance",
+			},
+			{
+				source: "IApexClass",
+				target: "fflib_IDomain",
+				type: "Inheritance",
+			},
+			{
+				source: "fflib_IDomainFactory",
+				target: "fflib_SObjectDomain",
+				type: "Inheritance",
+			},
+			{
+				source: "fflib_SObjectDomain",
+				target: "fflib_StringBuilder",
+				type: "Inheritance",
+			},
+			{
+				source: "fflib_ISObjectDomain",
+				target: "GenerateDataTests",
+				type: "Inheritance",
+			},
+			{
+				source: "IApexClass",
+				target: "fflib_IDomain",
+				type: "Inheritance",
+			},
+			{
+				source: "IApexClass",
+				target: "fflib_IDomain",
+				type: "Inheritance",
+			},
+			{
+				source: "IApexClass",
+				target: "fflib_IDomain",
+				type: "Inheritance",
+			},
+			{
+				source: "IApexClass",
+				target: "fflib_IDomain",
+				type: "Inheritance",
+			},
+			{
+				source: "IApexClass",
+				target: "fflib_IDomain",
+				type: "Inheritance",
+			},
+			{
+				source: "IApexClass",
+				target: "fflib_IDomain",
+				type: "Inheritance",
+			},
+			{
+				source: "IApexClass",
+				target: "fflib_IDomain",
+				type: "Inheritance",
+			},
+			{
+				source: "IApexClass",
+				target: "fflib_IDomain",
+				type: "Inheritance",
+			},
+		],
+	};
+}
