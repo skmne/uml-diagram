@@ -67,7 +67,6 @@ export default class NodesBuilder {
 
 	// Function to check for collisions with lines
 	hasLineCollision(x, y, width, height) {
-		console.log(state.links);
 		for (var i = 0; i < state.links.length; i++) {
 			var existingLine = state.links[i];
 			var lineX1 = existingLine.x1;

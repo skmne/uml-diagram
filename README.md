@@ -170,9 +170,13 @@ zoom.center();
   namespace?: string;   // Optional namespace
   width?: number;       // Node width (default: from style)
   height?: number;      // Node height (default: from style)
+  x?: number;           // Initial X coordinate (optional - auto-placed if not provided)
+  y?: number;           // Initial Y coordinate (optional - auto-placed if not provided)
   group?: number;       // Optional grouping
 }
 ```
+
+**Initial Coordinates**: You can specify `x` and `y` coordinates to control node placement. If not provided, the library uses an improved auto-placement algorithm that minimizes line crossings by organizing nodes in layers based on their connections.
 
 ### Link
 

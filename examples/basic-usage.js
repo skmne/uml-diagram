@@ -56,35 +56,14 @@ async function loadProjectData() {
 			links: structure.links || [],
 		};
 	} catch (error) {
-		console.warn("New structure file not found, trying old format:", error);
-		try {
-			// Fallback to old ES module format
-			const module = await import("./java-project-data.js");
-			return module.javaProjectData;
-		} catch (esError) {
-			console.warn("ES module import failed, trying JSON:", esError);
-			try {
-				// Fallback to JSON if ES modules don't work
-				const response = await fetch("./java-project-data.json");
-				return await response.json();
-			} catch (jsonError) {
-				console.error("Failed to load project data from all sources:", jsonError);
-				// Fallback to empty data
-				return { nodes: [], links: [] };
-			}
-		}
+		return { nodes: [], links: [] };
 	}
 }
 
 // Initialize diagram with Java project data
 async function initializeDiagram() {
-	// Load project data first
 	const projectData = await loadProjectData();
-	
-	// Set the data
 	diagram.setData(projectData);
-	
-	// Build the diagram with loaded data
 	diagram.build();
 }
 

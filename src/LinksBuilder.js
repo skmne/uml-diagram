@@ -16,7 +16,6 @@ export default class LinksBuilder {
 	update() {
 		this.#links
 			.attr("x1", (d) => {
-				console.log(d);
 				d.x1 = d.getSourceVector().getX();
 				return d.x1;
 			})

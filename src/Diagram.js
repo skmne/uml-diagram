@@ -102,7 +102,6 @@ class Diagram {
 	}
 
 	update() {
-		console.log("update");
 		this.#nodesBuilder.update();
 		this.#linksBuilder.update();
 	}

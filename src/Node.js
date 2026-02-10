@@ -13,7 +13,11 @@ export default class Node {
 		this.#name = nodeObj.name;
 		this.#width = nodeObj.width ? nodeObj.width : state.style.nodeWidth;
 		this.#height = nodeObj.height ? nodeObj.height : state.style.nodeHeight;
-		this.setInitPosition();
+		this.x = nodeObj.x;
+		this.y = nodeObj.y;
+		if (this.x === undefined || this.y === undefined) {
+			this.setInitPosition();
+		}
 	}
 
 	get id() {
@@ -86,7 +90,6 @@ export default class Node {
 
 	// Function to check for collisions with lines
 	hasLineCollision(x, y, width, height) {
-		console.log(state.links);
 		for (var i = 0; i < state.links.length; i++) {
 			var existingLine = state.links[i];
 			var lineX1 = existingLine.x1;
