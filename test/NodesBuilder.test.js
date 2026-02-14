@@ -1,10 +1,10 @@
 import * as d3 from 'd3';
-import NodesBuilder from './NodesBuilder.js';
-import Node from './Node.js';
-import state from './GlobalState.js';
+import NodesBuilder from '../src/NodesBuilder.js';
+import Node from '../src/Node.js';
+import state from '../src/GlobalState.js';
 
 // Mock the global state
-jest.mock('./GlobalState.js', () => ({
+jest.mock('../src/GlobalState.js', () => ({
   nodes: [],
   style: {
     nodeWidth: 100,

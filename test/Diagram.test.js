@@ -1,15 +1,15 @@
 import * as d3 from 'd3';
-import Diagram from './Diagram.js';
-import state from './GlobalState.js';
-import drag from './drag.js'; // Will be the mock
-import Zoom from './zoom.js'; // Will be the mock
+import Diagram from '../src/Diagram.js';
+import state from '../src/GlobalState.js';
+import drag from '../src/drag.js'; // Will be the mock
+import Zoom from '../src/zoom.js'; // Will be the mock
 
 // Mock dependencies
-jest.mock('./drag.js', () => jest.fn(() => jest.fn())); // Return a dummy function for d3.call
-jest.mock('./zoom.js', () => jest.fn().mockImplementation(() => {
+jest.mock('../src/drag.js', () => jest.fn(() => jest.fn())); // Return a dummy function for d3.call
+jest.mock('../src/zoom.js', () => jest.fn().mockImplementation(() => {
   return { /* mock zoom methods if needed */ };
 }));
-jest.mock('./GlobalState.js', () => ({
+jest.mock('../src/GlobalState.js', () => ({
   nodes: [],
   links: [],
   style: { 

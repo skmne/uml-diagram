@@ -23,7 +23,6 @@ class Diagram {
 		this.#height = svgElement.getAttribute("height");
 		state.width = this.#width;
 		state.height = this.#height;
-		console.log(this.#width, this.#height);
 		this.#nodesBuilder = new NodesBuilder(this.#width);
 		this.#zoom = new Zoom(d3, this.#svg, this.#width, this.#height);
 		// initZoom(d3, this.#width, this.#height);

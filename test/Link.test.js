@@ -1,10 +1,10 @@
-import Link from './Link.js';
-import Node from './Node.js';
-import state from './GlobalState.js';
-import Vector from './Vector.js';
+import Link from '../src/Link.js';
+import Node from '../src/Node.js';
+import state from '../src/GlobalState.js';
+import Vector from '../src/Vector.js';
 
 // Mock the global state
-jest.mock('./GlobalState.js', () => ({
+jest.mock('../src/GlobalState.js', () => ({
   nodes: [],
   style: { nodeWidth: 100, nodeHeight: 50 }, // Add default style
   padding: 10,

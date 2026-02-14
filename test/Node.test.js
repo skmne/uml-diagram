@@ -1,7 +1,7 @@
-import Node from './Node.js';
-import state from './GlobalState.js';
+import Node from '../src/Node.js';
+import state from '../src/GlobalState.js';
 
-jest.mock('./GlobalState.js', () => ({
+jest.mock('../src/GlobalState.js', () => ({
   style: {
     nodeWidth: 100,
     nodeHeight: 50,

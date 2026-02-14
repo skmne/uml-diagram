@@ -1,4 +1,4 @@
-import Vector from './Vector.js';
+import Vector from '../src/Vector.js';
 
 describe('Vector', () => {
   it('should create a vector with the correct coordinates', () => {
