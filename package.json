@@ -4,7 +4,6 @@
   "description": "A lightweight JavaScript library for rendering interactive UML class diagrams using D3.js",
   "main": "dist/main.js",
   "module": "dist/main.js",
-  "types": "dist/index.d.ts",
   "files": [
     "dist",
     "README.md",
@@ -27,6 +26,7 @@
     "interactive",
     "graph"
   ],
+  "author": "Aliaksandr Lesik",
   "license": "MIT",
   "repository": {
     "type": "git",
