@@ -79,10 +79,10 @@ export default class NodesBuilder {
 				y < Math.max(lineY1, lineY2) + this.#padding &&
 				y + height + this.#padding > Math.min(lineY1, lineY2)
 			) {
-				return true; // Line collision detected
+				return true; // Collision detected
 			}
 		}
-		return false;
+		return false; // Position is clear
 	}
 
 	setData(data) {

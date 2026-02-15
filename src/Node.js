@@ -3,7 +3,7 @@ import state from "./GlobalState.js";
 export default class Node {
 	#id;
 	#name;
-	#width; //default value todo move to the diagram set
+	#width;
 	#height;
 	x;
 	y;
@@ -55,13 +55,6 @@ export default class Node {
 			}
 		}
 		this.setPosition(initX, initY);
-
-		// // Update x for the next rectangle
-		// initX += width + state.padding;
-		// if (initX + width > state.width) {
-		// 	initX = 0;
-		// 	initY += height + state.padding;
-		// }
 	}
 
 	isPositionClear(x, y, width, height) {
@@ -103,9 +96,9 @@ export default class Node {
 				y < Math.max(lineY1, lineY2) + state.padding &&
 				y + height + state.padding > Math.min(lineY1, lineY2)
 			) {
-				return true; // Line collision detected
+				return true; // Collision detected
 			}
 		}
-		return false;
+		return false; // Position is clear
 	}
 }
