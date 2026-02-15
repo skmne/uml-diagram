@@ -5,7 +5,7 @@ const state = {
 		nodeForeground: "#0f0f0f",
 		nodeBackground: "#bfcace",
 		fontFamily: "Arial, Helvetica, sans-serif",
-		fontSize: "15sp",
+		fontSize: "15px",
 		fontColor: "#0f0f0f",
 		nodeWidth: 160,
 		nodeHeight: 50,

@@ -1,4 +1,4 @@
-import * as d3 from "d3";
+import { select } from "d3-selection";
 import NodesBuilder from "./NodesBuilder.js";
 import LinksBuilder from "./LinksBuilder.js";
 import drag from "./drag.js";
@@ -18,14 +18,13 @@ class Diagram {
 	#svgElement;
 	constructor(svgElement) {
 		this.#svgElement = svgElement;
-		this.#svg = d3.select(svgElement);
+		this.#svg = select(svgElement);
 		this.#width = svgElement.getAttribute("width");
 		this.#height = svgElement.getAttribute("height");
 		state.width = this.#width;
 		state.height = this.#height;
 		this.#nodesBuilder = new NodesBuilder(this.#width);
-		this.#zoom = new Zoom(d3, this.#svg, this.#width, this.#height);
-		// initZoom(d3, this.#width, this.#height);
+		this.#zoom = new Zoom(this.#svg, this.#width, this.#height);
 	}
 	addItems(newData) {
 		this.setData(newData);
@@ -43,7 +42,7 @@ class Diagram {
 	recreateDiagram() {
 		this.#nodesBuilder.createNodes();
 		this.#linksBuilder.createLinks();
-		this.#nodesBuilder.setDragRectangle(drag(d3, this));
+		this.#nodesBuilder.setDragRectangle(drag(this));
 	}
 
 	setData(data) {
@@ -93,7 +92,7 @@ class Diagram {
 	build() {
 		const rootGroupContainer = this.#createGroupContainer(this.#svg);
 		this.#nodesBuilder.build(rootGroupContainer);
-		this.#nodesBuilder.setDragRectangle(drag(d3, this));
+		this.#nodesBuilder.setDragRectangle(drag(this));
 		this.#linksBuilder = new LinksBuilder();
 		this.#linksBuilder.build(rootGroupContainer);
 
@@ -107,46 +106,6 @@ class Diagram {
 
 	getZoom() {
 		return this.#zoom;
-	}
-
-	#generateSimulation(nodes) {
-		return d3
-			.forceSimulation()
-			.nodes(nodes)
-			.force(
-				"link",
-				d3
-					.forceLink()
-					.id(function (d) {
-						return d.id;
-					})
-					.distance(10)
-			)
-			.force("charge", d3.forceManyBody().strength(-200))
-			.force("center", d3.forceCenter(this.#width / 2, this.#height / 2))
-			.force(
-				"x",
-				d3.forceX().x((d) => {
-					return 0;
-				})
-			)
-			.force(
-				"y",
-				d3.forceY().y((d) => {
-					return 0;
-				})
-			)
-			.force(
-				"collision",
-				d3.forceCollide().radius((d) => {
-					return this.#getRectangleRadius() / 2;
-				})
-			)
-			.on("end", () => {
-				console.log("*** manage animation ***");
-				// this.svg.classed("hidden", false);
-			})
-			.on("tick", ticked(this));
 	}
 
 	#createGroupContainer(svg) {

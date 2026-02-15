@@ -1,4 +1,3 @@
-import { drag } from "d3";
 import Node from "./Node.js";
 import state from "./GlobalState.js";
 

@@ -1,16 +1,15 @@
+import { zoom as d3Zoom } from "d3-zoom";
+
 export default class Zoom {
-	// #d3;
 	#width;
 	#height;
 	#zoom;
 	#svg;
-	constructor(d3, svg, width, height) {
-		// this.#d3 = d3;
+	constructor(svg, width, height) {
 		this.#svg = svg;
 		this.#width = width;
 		this.#height = height;
-		this.#zoom = d3
-			.zoom()
+		this.#zoom = d3Zoom()
 			.scaleExtent([0.25, 10])
 			.on("zoom", (e) => {
 				this.#svg.select("g").attr("transform", e.transform);

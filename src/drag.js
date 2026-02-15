@@ -1,6 +1,9 @@
-export default function drag(d3, diagram) {
+import { drag as d3Drag } from "d3-drag";
+import { select } from "d3-selection";
+
+export default function drag(diagram) {
 	function dragstarted(event) {
-		d3.select(this).attr("stroke", "var(--vscode-editorLink-activeForeground)");
+		select(this).attr("stroke", "var(--vscode-editorLink-activeForeground)");
 	}
 
 	function dragged(event, d) {
@@ -10,7 +13,7 @@ export default function drag(d3, diagram) {
 		// const offsetX = mouseX - d.x;
 		// const offsetY = mouseY - d.y;
 
-		d3.select(this.parentNode)
+		select(this.parentNode)
 			.raise()
 			.attr("x", (d.x = mouseX))
 			.attr("y", (d.y = mouseY));
@@ -19,8 +22,8 @@ export default function drag(d3, diagram) {
 	}
 
 	function dragended() {
-		d3.select(this).attr("stroke", "var(--vscode-editor-foreground)"); //todo move to another place
+		select(this).attr("stroke", "var(--vscode-editor-foreground)");
 	}
 
-	return d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
+	return d3Drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);
 }
