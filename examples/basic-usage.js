@@ -28,9 +28,9 @@ function setSvgSize(svgElement, width, height) {
 }
 
 // Initialize the diagram
-// When using from npm: import Diagram from 'uml-diagram';
+// When using from npm: import Diagram from '@skmne/uml-diagram';
 // For this example, we use the UMD build:
-const Diagram = MyLibrary;
+const Diagram = UMLDiagram;
 const diagram = new Diagram(svgElement);
 
 // Configure styling
