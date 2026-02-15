@@ -193,7 +193,7 @@ zoom.center();
 See the `examples/` directory for complete working examples:
 
 - `basic-usage.html` - Basic setup and usage
-- More examples coming soon...
+- ![more examples](image.png)
 
 ## Development
 
