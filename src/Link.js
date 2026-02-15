@@ -37,72 +37,102 @@ export default class Link {
 	}
 
 	#sourceX() {
-		const sourceX = this.#sourceNode.x;
-		const sourceY = this.#sourceNode.y;
-		const targetX = this.#targetNode.x;
-		const targetY = this.#targetNode.y;
+		const sourceCenterX = this.#sourceNode.x + this.#sourceNode.width / 2;
+		const sourceCenterY = this.#sourceNode.y + this.#sourceNode.height / 2;
+		const targetCenterX = this.#targetNode.x + this.#targetNode.width / 2;
+		const targetCenterY = this.#targetNode.y + this.#targetNode.height / 2;
 
-		if (Math.abs(sourceY - targetY) <= this.#sourceNode.height) {
-			if (sourceX > targetX) {
-				return sourceX;
+		const dx = targetCenterX - sourceCenterX;
+		const dy = targetCenterY - sourceCenterY;
+
+		// Determine which side of the source rectangle to use
+		if (Math.abs(dx) > Math.abs(dy)) {
+			// Horizontal connection is dominant
+			if (dx > 0) {
+				// Target is to the right - use right side center
+				return this.#sourceNode.x + this.#sourceNode.width;
 			} else {
-				return sourceX + this.#sourceNode.width;
+				// Target is to the left - use left side center
+				return this.#sourceNode.x;
 			}
-		} else if (Math.abs(sourceX - targetX) <= this.#sourceNode.width + 20) {
-			return sourceX + this.#sourceNode.width / 2;
-		} else if (sourceX > targetX) {
-			return sourceX;
 		} else {
-			return sourceX + this.#sourceNode.width;
+			// Vertical connection is dominant - use horizontal center
+			return sourceCenterX;
 		}
 	}
 
 	#targetX() {
-		const sourceX = this.#sourceNode.x;
-		const sourceY = this.#sourceNode.y;
-		const targetX = this.#targetNode.x;
-		const targetY = this.#targetNode.y;
+		const sourceCenterX = this.#sourceNode.x + this.#sourceNode.width / 2;
+		const sourceCenterY = this.#sourceNode.y + this.#sourceNode.height / 2;
+		const targetCenterX = this.#targetNode.x + this.#targetNode.width / 2;
+		const targetCenterY = this.#targetNode.y + this.#targetNode.height / 2;
 
-		if (Math.abs(sourceY - targetY) <= this.#targetNode.height) {
-			if (sourceX < targetX) {
-				return targetX;
+		const dx = targetCenterX - sourceCenterX;
+		const dy = targetCenterY - sourceCenterY;
+
+		// Determine which side of the target rectangle to use
+		if (Math.abs(dx) > Math.abs(dy)) {
+			// Horizontal connection is dominant
+			if (dx > 0) {
+				// Source is to the left - use left side center
+				return this.#targetNode.x;
 			} else {
-				return targetX + this.#targetNode.width;
+				// Source is to the right - use right side center
+				return this.#targetNode.x + this.#targetNode.width;
 			}
-		} else if (Math.abs(sourceX - targetX) <= this.#targetNode.width + 20) {
-			return targetX + this.#targetNode.width / 2;
-		} else if (sourceX < targetX) {
-			return targetX;
-		} else if (sourceX > targetX) {
-			return targetX + this.#targetNode.width;
 		} else {
-			return targetX + this.#targetNode.width / 2;
+			// Vertical connection is dominant - use horizontal center
+			return targetCenterX;
 		}
 	}
 
 	#sourceY() {
-		const sourceY = this.#sourceNode.y;
-		const targetY = this.#targetNode.y;
+		const sourceCenterX = this.#sourceNode.x + this.#sourceNode.width / 2;
+		const sourceCenterY = this.#sourceNode.y + this.#sourceNode.height / 2;
+		const targetCenterX = this.#targetNode.x + this.#targetNode.width / 2;
+		const targetCenterY = this.#targetNode.y + this.#targetNode.height / 2;
 
-		if (Math.abs(sourceY - targetY) <= Math.abs(this.#sourceNode.height - this.#targetNode.height)) {
-			return sourceY + this.#sourceNode.height / 2;
-		} else if (sourceY > targetY) {
-			return sourceY;
+		const dx = targetCenterX - sourceCenterX;
+		const dy = targetCenterY - sourceCenterY;
+
+		// Determine which side of the source rectangle to use
+		if (Math.abs(dy) > Math.abs(dx)) {
+			// Vertical connection is dominant
+			if (dy > 0) {
+				// Target is below - use bottom side center
+				return this.#sourceNode.y + this.#sourceNode.height;
+			} else {
+				// Target is above - use top side center
+				return this.#sourceNode.y;
+			}
 		} else {
-			return sourceY + this.#sourceNode.height;
+			// Horizontal connection is dominant - use vertical center
+			return sourceCenterY;
 		}
 	}
 
 	#targetY() {
-		const sourceY = this.#sourceNode.y;
-		const targetY = this.#targetNode.y;
+		const sourceCenterX = this.#sourceNode.x + this.#sourceNode.width / 2;
+		const sourceCenterY = this.#sourceNode.y + this.#sourceNode.height / 2;
+		const targetCenterX = this.#targetNode.x + this.#targetNode.width / 2;
+		const targetCenterY = this.#targetNode.y + this.#targetNode.height / 2;
 
-		if (Math.abs(sourceY - targetY) <= this.#targetNode.height) {
-			return targetY + this.#targetNode.height / 2;
-		} else if (sourceY > targetY) {
-			return targetY + this.#targetNode.height;
-		} else if (sourceY < targetY) {
-			return targetY;
+		const dx = targetCenterX - sourceCenterX;
+		const dy = targetCenterY - sourceCenterY;
+
+		// Determine which side of the target rectangle to use
+		if (Math.abs(dy) > Math.abs(dx)) {
+			// Vertical connection is dominant
+			if (dy > 0) {
+				// Source is above - use top side center
+				return this.#targetNode.y;
+			} else {
+				// Source is below - use bottom side center
+				return this.#targetNode.y + this.#targetNode.height;
+			}
+		} else {
+			// Horizontal connection is dominant - use vertical center
+			return targetCenterY;
 		}
 	}
 
