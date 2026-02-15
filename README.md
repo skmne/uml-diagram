@@ -13,12 +13,12 @@ A lightweight, interactive JavaScript library for rendering UML class diagrams u
 ## Installation
 
 ```bash
-npm install @your-username/uml-diagram
+npm install @skmne/uml-diagram
 ```
 
 Or via CDN (when published):
 ```html
-<script src="https://unpkg.com/@your-username/uml-diagram/dist/main.js"></script>
+<script src="https://unpkg.com/@skmne/uml-diagram/dist/main.js"></script>
 ```
 
 ## Quick Start
@@ -27,7 +27,7 @@ Or via CDN (when published):
 
 ```html
 <svg id="uml-diagram" width="800" height="600"></svg>
-<script src="./node_modules/@your-username/uml-diagram/dist/main.js"></script>
+<script src="./node_modules/@skmne/uml-diagram/dist/main.js"></script>
 <script>
   const svgElement = document.querySelector("#uml-diagram");
   const diagram = new UMLDiagram.default(svgElement);
@@ -47,7 +47,7 @@ Or via CDN (when published):
 ### ES Modules
 
 ```javascript
-import Diagram from '@your-username/uml-diagram';
+import Diagram from '@skmne/uml-diagram';
 
 const svgElement = document.querySelector("#uml-diagram");
 const diagram = new Diagram(svgElement);

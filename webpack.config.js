@@ -10,7 +10,7 @@ export default {
 		filename: "main.js",
 		path: path.resolve(__dirname, "dist"),
 		library: {
-			name: "MyLibrary",
+			name: "UMLDiagram",
 			type: "umd",
 			export: "default",
 		},
