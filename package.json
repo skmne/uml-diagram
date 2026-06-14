@@ -1,6 +1,6 @@
 {
   "name": "@alesik/uml-diagram",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "A lightweight JavaScript library for rendering interactive UML class diagrams using D3.js",
   "main": "dist/main.js",
   "module": "dist/main.js",

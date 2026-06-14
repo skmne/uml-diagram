@@ -162,7 +162,9 @@ Returns:
 
 #### `exportSvg(style)`
 
-Export the current SVG as a string. Pass optional export-only colors to serialize the diagram differently from the on-screen theme.
+Export the diagram SVG as a string. By default, export fits the SVG `viewBox`, `width`, and `height` to the full diagram content, so nodes outside the current viewport and the current zoom/pan transform do not crop the exported SVG.
+
+Pass optional export-only colors to serialize the diagram differently from the on-screen theme.
 
 The export style is temporary: the rendered diagram is restored after the SVG string is created.
 
@@ -172,10 +174,26 @@ const svgString = diagram.exportSvg({
   nodeForeground: "#111111",
   nodeBackground: "#ffffff",
   fontColor: "#111111",
+  fitContent: true,
+  padding: 24,
 });
 ```
 
 This is useful when the diagram is displayed as light elements on a dark background, but exported as dark elements on a light background.
+
+`fitContent` defaults to `true`. Use `padding` to control the margin around the exported content. To export the current SVG viewport instead, pass `fitContent: false`.
+
+Print-friendly export example:
+
+```javascript
+const svg = diagram.exportSvg({
+  background: "#ffffff",
+  nodeForeground: "#111111",
+  nodeBackground: "#ffffff",
+  fontColor: "#111111",
+  padding: 24,
+});
+```
 
 #### `addItems(data)`
 

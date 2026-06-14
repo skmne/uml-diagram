@@ -16,6 +16,7 @@ class Diagram {
 	#height;
 	#zoom;
 	#svgElement;
+	#rootGroup;
 	#listeners = {
 		layoutChanged: new Set(),
 		nodeMoved: new Set(),
@@ -146,6 +147,7 @@ class Diagram {
 
 	build() {
 		const rootGroupContainer = this.#createGroupContainer(this.#svg);
+		this.#rootGroup = rootGroupContainer;
 		this.#nodesBuilder.build(rootGroupContainer);
 		this.#nodesBuilder.setNodeContextMenu((event, node) => this.notifyNodeContextMenu(event, node));
 		this.#nodesBuilder.setDragRectangle(drag(this));
@@ -167,19 +169,31 @@ class Diagram {
 	exportSvg(style = {}) {
 		style = style || {};
 		const originalStyle = this.#getStyleSnapshot();
+		const originalSvgAttributes = this.#getSvgAttributesSnapshot();
+		const rootGroup = this.#getRootGroup();
+		const originalRootTransform = rootGroup ? rootGroup.attr("transform") : null;
 		const exportBackground = style.background || style.svgBackground;
 		const hasExportStyle = Object.keys(style).length > 0;
+		const fitContent = style.fitContent !== false;
 		if (hasExportStyle) {
 			this.setStyle(style);
 		}
-		const backgroundRect = exportBackground ? this.#createExportBackground(exportBackground) : null;
+		let backgroundRect = null;
 
 		try {
+			const exportArea = fitContent
+				? this.#fitSvgToContent(rootGroup, this.#getExportPadding(style))
+				: this.#getCurrentViewportArea();
+			backgroundRect = exportBackground ? this.#createExportBackground(exportBackground, exportArea) : null;
 			return new XMLSerializer().serializeToString(this.#svgElement);
 		} finally {
 			if (backgroundRect) {
 				backgroundRect.remove();
 			}
+			if (rootGroup) {
+				rootGroup.attr("transform", originalRootTransform);
+			}
+			this.#restoreSvgAttributes(originalSvgAttributes);
 			if (hasExportStyle) {
 				this.setStyle(originalStyle);
 			}
@@ -219,14 +233,103 @@ class Diagram {
 		return { ...state.style };
 	}
 
-	#createExportBackground(background) {
+	#getSvgAttributesSnapshot() {
+		return {
+			width: this.#svg.attr("width"),
+			height: this.#svg.attr("height"),
+			viewBox: this.#svg.attr("viewBox"),
+		};
+	}
+
+	#restoreSvgAttributes(attributes) {
+		Object.entries(attributes).forEach(([name, value]) => {
+			this.#svg.attr(name, value);
+		});
+	}
+
+	#getRootGroup() {
+		if (this.#rootGroup) {
+			return this.#rootGroup;
+		}
+
+		const rootGroup = this.#svg.select("g");
+		return rootGroup.empty() ? null : rootGroup;
+	}
+
+	#getExportPadding(style) {
+		if (style.padding === undefined || style.padding === null) {
+			return 24;
+		}
+
+		const padding = Number(style.padding);
+		return Number.isFinite(padding) ? Math.max(0, padding) : 24;
+	}
+
+	#fitSvgToContent(rootGroup, padding) {
+		if (!rootGroup) {
+			return this.#getCurrentViewportArea();
+		}
+
+		rootGroup.attr("transform", null);
+		const rootNode = rootGroup.node();
+		if (!rootNode || typeof rootNode.getBBox !== "function") {
+			return this.#getCurrentViewportArea();
+		}
+
+		let box;
+		try {
+			box = rootNode.getBBox();
+		} catch {
+			return this.#getCurrentViewportArea();
+		}
+		if (![box.x, box.y, box.width, box.height].every(Number.isFinite)) {
+			return this.#getCurrentViewportArea();
+		}
+
+		const exportArea = {
+			x: box.x - padding,
+			y: box.y - padding,
+			width: box.width + padding * 2,
+			height: box.height + padding * 2,
+		};
+		this.#svg
+			.attr("width", exportArea.width)
+			.attr("height", exportArea.height)
+			.attr("viewBox", `${exportArea.x} ${exportArea.y} ${exportArea.width} ${exportArea.height}`);
+
+		return exportArea;
+	}
+
+	#getCurrentViewportArea() {
+		const viewBox = this.#svg.attr("viewBox");
+		if (viewBox) {
+			const values = viewBox.split(/\s+/).map(Number);
+			if (values.length === 4 && values.every(Number.isFinite)) {
+				return {
+					x: values[0],
+					y: values[1],
+					width: values[2],
+					height: values[3],
+				};
+			}
+		}
+
+		return {
+			x: 0,
+			y: 0,
+			width: Number(this.#svg.attr("width") || this.#width),
+			height: Number(this.#svg.attr("height") || this.#height),
+		};
+	}
+
+	#createExportBackground(background, exportArea) {
 		return this.#svg
 			.insert("rect", ":first-child")
 			.attr("data-uml-export-background", "true")
-			.attr("x", 0)
-			.attr("y", 0)
-			.attr("width", this.#width)
-			.attr("height", this.#height)
+			.attr("x", exportArea.x)
+			.attr("y", exportArea.y)
+			.attr("width", exportArea.width)
+			.attr("height", exportArea.height)
 			.attr("fill", this.#converCSSVarToValue(background));
 	}
 

@@ -21,6 +21,8 @@ jest.mock('../src/GlobalState.js', () => ({
   height: 0,
 }));
 
+const parseSvgString = (svgString) => new DOMParser().parseFromString(svgString, 'image/svg+xml').documentElement;
+
 describe('Diagram', () => {
   let diagram;
   let svgElement;
@@ -378,6 +380,119 @@ describe('Diagram', () => {
         expect(rect.attr('stroke')).toBe('#ffffff');
         expect(text.attr('fill')).toBe('#ffffff');
         expect(backgroundRect.empty()).toBe(true);
+    });
+
+    it('should fit exported SVG to the full content bbox by default', () => {
+        diagram.setData({
+            nodes: [{ id: 'n1', name: 'Node 1', x: -50, y: 10 }],
+            links: [],
+        });
+        diagram.build();
+
+        const rootGroup = d3.select(svgElement).select('g');
+        rootGroup.attr('transform', 'translate(100, 50) scale(2)');
+        rootGroup.node().getBBox = jest.fn(() => ({
+            x: -50,
+            y: 10,
+            width: 300,
+            height: 200,
+        }));
+
+        const exportedSvg = parseSvgString(diagram.exportSvg());
+        const exportedRootGroup = exportedSvg.querySelector('g');
+
+        expect(exportedSvg.getAttribute('viewBox')).toBe('-74 -14 348 248');
+        expect(exportedSvg.getAttribute('width')).toBe('348');
+        expect(exportedSvg.getAttribute('height')).toBe('248');
+        expect(exportedRootGroup.getAttribute('transform')).toBeNull();
+    });
+
+    it('should restore width, height, viewBox, and transform after fitted export', () => {
+        diagram.setData({
+            nodes: [{ id: 'n1', name: 'Node 1', x: -50, y: 10 }],
+            links: [],
+        });
+        diagram.build();
+
+        svgElement.setAttribute('width', '800');
+        svgElement.setAttribute('height', '600');
+        svgElement.setAttribute('viewBox', '0 0 800 600');
+
+        const rootGroup = d3.select(svgElement).select('g');
+        rootGroup.attr('transform', 'translate(100, 50) scale(2)');
+        rootGroup.node().getBBox = jest.fn(() => ({
+            x: -50,
+            y: 10,
+            width: 300,
+            height: 200,
+        }));
+
+        diagram.exportSvg({ padding: 24 });
+
+        expect(svgElement.getAttribute('width')).toBe('800');
+        expect(svgElement.getAttribute('height')).toBe('600');
+        expect(svgElement.getAttribute('viewBox')).toBe('0 0 800 600');
+        expect(rootGroup.attr('transform')).toBe('translate(100, 50) scale(2)');
+    });
+
+    it('should size the export background to the fitted export area', () => {
+        diagram.setData({
+            nodes: [{ id: 'n1', name: 'Node 1', x: 10, y: 20 }],
+            links: [],
+        });
+        diagram.build();
+
+        const rootGroup = d3.select(svgElement).select('g');
+        rootGroup.node().getBBox = jest.fn(() => ({
+            x: 10,
+            y: 20,
+            width: 300,
+            height: 100,
+        }));
+
+        const exportedSvg = parseSvgString(diagram.exportSvg({
+            background: '#ffffff',
+            padding: 24,
+        }));
+        const backgroundRect = exportedSvg.querySelector('rect[data-uml-export-background="true"]');
+
+        expect(backgroundRect.getAttribute('x')).toBe('-14');
+        expect(backgroundRect.getAttribute('y')).toBe('-4');
+        expect(backgroundRect.getAttribute('width')).toBe('348');
+        expect(backgroundRect.getAttribute('height')).toBe('148');
+    });
+
+    it('should keep viewport export behavior when fitContent is false', () => {
+        diagram.setData({
+            nodes: [{ id: 'n1', name: 'Node 1', x: -50, y: 10 }],
+            links: [],
+        });
+        diagram.build();
+
+        const rootGroup = d3.select(svgElement).select('g');
+        rootGroup.attr('transform', 'translate(100, 50) scale(2)');
+        rootGroup.node().getBBox = jest.fn(() => ({
+            x: -50,
+            y: 10,
+            width: 300,
+            height: 200,
+        }));
+
+        const exportedSvg = parseSvgString(diagram.exportSvg({
+            fitContent: false,
+            background: '#ffffff',
+        }));
+        const exportedRootGroup = exportedSvg.querySelector('g');
+        const backgroundRect = exportedSvg.querySelector('rect[data-uml-export-background="true"]');
+
+        expect(exportedSvg.getAttribute('viewBox')).toBeNull();
+        expect(exportedSvg.getAttribute('width')).toBe('800');
+        expect(exportedSvg.getAttribute('height')).toBe('600');
+        expect(exportedRootGroup.getAttribute('transform')).toBe('translate(100, 50) scale(2)');
+        expect(backgroundRect.getAttribute('x')).toBe('0');
+        expect(backgroundRect.getAttribute('y')).toBe('0');
+        expect(backgroundRect.getAttribute('width')).toBe('800');
+        expect(backgroundRect.getAttribute('height')).toBe('600');
     });
   });
 });
