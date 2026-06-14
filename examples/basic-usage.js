@@ -160,7 +160,7 @@ document.addEventListener("keydown", function (event) {
 
 // Export functionality
 document.getElementById("export").addEventListener("click", () => {
-	const svgString = getSVGText();
+	const svgString = diagram.exportSvg(getExportStyle());
 	const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
 	const link = document.createElement("a");
 	link.href = URL.createObjectURL(blob);
@@ -168,7 +168,11 @@ document.getElementById("export").addEventListener("click", () => {
 	link.click();
 });
 
-function getSVGText() {
-	const serializer = new XMLSerializer();
-	return serializer.serializeToString(svgElement);
+function getExportStyle() {
+	return {
+		background: document.getElementById("exportBackground").value,
+		nodeForeground: document.getElementById("exportForeground").value,
+		nodeBackground: document.getElementById("exportNodeBackground").value,
+		fontColor: document.getElementById("exportFontColor").value,
+	};
 }

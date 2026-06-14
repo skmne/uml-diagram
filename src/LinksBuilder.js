@@ -33,6 +33,16 @@ export default class LinksBuilder {
 			});
 	}
 
+	updateStyle() {
+		if (this.#links) {
+			this.#links.attr("stroke", state.style.nodeForeground);
+		}
+		if (this.#arrows) {
+			this.#arrows[0].select("path").attr("fill", state.style.nodeForeground);
+			this.#arrows[1].select("path").attr("stroke", state.style.nodeForeground);
+		}
+	}
+
 	#createLinksContainer(groupContainer) {
 		return groupContainer.append("g").attr("class", "links");
 	}

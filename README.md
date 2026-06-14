@@ -78,6 +78,7 @@ const diagram = new Diagram(svgElement);
 #### `setStyle(style)`
 
 Configure the visual appearance of the diagram.
+You can also call this after `build()` to update the rendered SVG before exporting it.
 
 ```javascript
 diagram.setStyle({
@@ -158,6 +159,23 @@ Returns:
   ];
 }
 ```
+
+#### `exportSvg(style)`
+
+Export the current SVG as a string. Pass optional export-only colors to serialize the diagram differently from the on-screen theme.
+
+The export style is temporary: the rendered diagram is restored after the SVG string is created.
+
+```javascript
+const svgString = diagram.exportSvg({
+  background: "#ffffff",
+  nodeForeground: "#111111",
+  nodeBackground: "#ffffff",
+  fontColor: "#111111",
+});
+```
+
+This is useful when the diagram is displayed as light elements on a dark background, but exported as dark elements on a light background.
 
 #### `addItems(data)`
 

@@ -120,6 +120,18 @@ export default class NodesBuilder {
 		this.#textHeaders.attr("x", (d) => d.x).attr("y", (d) => d.y);
 	}
 
+	updateStyle() {
+		if (this.#rectangles) {
+			this.#rectangles.attr("fill", state.style.nodeBackground).attr("stroke", state.style.nodeForeground);
+		}
+		if (this.#textHeaders) {
+			this.#textHeaders
+				.attr("font-family", state.style.fontFamily)
+				.attr("font-size", state.style.fontSize)
+				.attr("fill", state.style.fontColor);
+		}
+	}
+
 	setDragRectangle(_drag) {
 		this.#rectangles.call(_drag);
 	}

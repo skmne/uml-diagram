@@ -267,5 +267,74 @@ describe('Diagram', () => {
         // check that others are not changed
         expect(state.style.nodeWidth).toBe(100);
     });
+
+    it('should apply style changes to an already rendered diagram', () => {
+        diagram.setData({
+            nodes: [
+                { id: 'n1', name: 'Node 1', x: 10, y: 20 },
+                { id: 'n2', name: 'Node 2', x: 200, y: 20 },
+            ],
+            links: [{ source: 'n1', target: 'n2', type: 'Association' }],
+        });
+        diagram.build();
+
+        diagram.setStyle({
+            nodeForeground: '#112233',
+            nodeBackground: '#ffffff',
+            fontColor: '#445566',
+            fontFamily: 'Georgia',
+            fontSize: '18px',
+        });
+
+        const rect = d3.select(svgElement).select('rect');
+        const text = d3.select(svgElement).select('text');
+        const line = d3.select(svgElement).select('line');
+        const standardArrowPath = d3.select(svgElement).select('marker#standard-arrow path');
+
+        expect(rect.attr('fill')).toBe('#ffffff');
+        expect(rect.attr('stroke')).toBe('#112233');
+        expect(text.attr('fill')).toBe('#445566');
+        expect(text.attr('font-family')).toBe('Georgia');
+        expect(text.attr('font-size')).toBe('18px');
+        expect(line.attr('stroke')).toBe('#112233');
+        expect(standardArrowPath.attr('fill')).toBe('#112233');
+    });
+
+    it('should export SVG with temporary colors without changing rendered style', () => {
+        diagram.setData({
+            nodes: [
+                { id: 'n1', name: 'Node 1', x: 10, y: 20 },
+                { id: 'n2', name: 'Node 2', x: 200, y: 20 },
+            ],
+            links: [{ source: 'n1', target: 'n2', type: 'Association' }],
+        });
+        diagram.setStyle({
+            nodeForeground: '#ffffff',
+            nodeBackground: '#111111',
+            fontColor: '#ffffff',
+        });
+        diagram.build();
+
+        const exportedSvg = diagram.exportSvg({
+            background: '#ffffff',
+            nodeForeground: '#111111',
+            nodeBackground: '#ffffff',
+            fontColor: '#111111',
+        });
+
+        expect(exportedSvg).toContain('data-uml-export-background="true"');
+        expect(exportedSvg).toContain('fill="#ffffff"');
+        expect(exportedSvg).toContain('stroke="#111111"');
+        expect(exportedSvg).toContain('fill="#111111"');
+
+        const rect = d3.select(svgElement).select('rect');
+        const text = d3.select(svgElement).select('text');
+        const backgroundRect = d3.select(svgElement).select('rect[data-uml-export-background="true"]');
+
+        expect(rect.attr('fill')).toBe('#111111');
+        expect(rect.attr('stroke')).toBe('#ffffff');
+        expect(text.attr('fill')).toBe('#ffffff');
+        expect(backgroundRect.empty()).toBe(true);
+    });
   });
 });

@@ -110,6 +110,7 @@ class Diagram {
 			: state.style.fontColor;
 		state.style.nodeWidth = style.nodeWidth ? style.nodeWidth : state.style.nodeWidth;
 		state.style.nodeHeight = style.nodeHeight ? style.nodeHeight : state.style.nodeHeight;
+		this.#updateRenderedStyle();
 
 		// state.style.nodeBackground = getComputedStyle(document.documentElement, null).getPropertyValue(
 		// 	state.style.nodeBackground
@@ -148,6 +149,28 @@ class Diagram {
 		return this.#zoom;
 	}
 
+	exportSvg(style = {}) {
+		style = style || {};
+		const originalStyle = this.#getStyleSnapshot();
+		const exportBackground = style.background || style.svgBackground;
+		const hasExportStyle = Object.keys(style).length > 0;
+		if (hasExportStyle) {
+			this.setStyle(style);
+		}
+		const backgroundRect = exportBackground ? this.#createExportBackground(exportBackground) : null;
+
+		try {
+			return new XMLSerializer().serializeToString(this.#svgElement);
+		} finally {
+			if (backgroundRect) {
+				backgroundRect.remove();
+			}
+			if (hasExportStyle) {
+				this.setStyle(originalStyle);
+			}
+		}
+	}
+
 	#emitLayoutChanged() {
 		this.#emit("layoutChanged", () => this.getData());
 	}
@@ -175,6 +198,28 @@ class Diagram {
 
 	#getRectangleRadius() {
 		return Math.sqrt(Math.pow(state.style.nodeWidth, 2) + Math.pow(state.style.nodeHeight, 2));
+	}
+
+	#getStyleSnapshot() {
+		return { ...state.style };
+	}
+
+	#createExportBackground(background) {
+		return this.#svg
+			.insert("rect", ":first-child")
+			.attr("data-uml-export-background", "true")
+			.attr("x", 0)
+			.attr("y", 0)
+			.attr("width", this.#width)
+			.attr("height", this.#height)
+			.attr("fill", this.#converCSSVarToValue(background));
+	}
+
+	#updateRenderedStyle() {
+		this.#nodesBuilder.updateStyle();
+		if (this.#linksBuilder) {
+			this.#linksBuilder.updateStyle();
+		}
 	}
 }
 function ticked(diagram) {

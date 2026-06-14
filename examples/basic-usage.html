@@ -131,6 +131,29 @@
 		.zoom {
 			padding-top: 16px;
 		}
+		.export-colors {
+			margin-top: 20px;
+			padding: 8px;
+			background: rgba(255, 255, 255, 0.92);
+			border: 1px solid #aab4b8;
+			font-family: Arial, Helvetica, sans-serif;
+			font-size: 11px;
+			color: #172126;
+		}
+		.export-colors label {
+			display: grid;
+			grid-template-columns: 1fr 28px;
+			gap: 6px;
+			align-items: center;
+			margin-top: 6px;
+		}
+		.export-colors input {
+			width: 28px;
+			height: 24px;
+			padding: 0;
+			border: 1px solid #8a969b;
+			background: transparent;
+		}
 	</style>
 
 	<body>
@@ -183,6 +206,25 @@
 				<div>
 					<a id="remove">Remove</a>
 				</div>
+			</div>
+			<div class="export-colors">
+				<strong>Export colors</strong>
+				<label>
+					Background
+					<input id="exportBackground" type="color" value="#ffffff" />
+				</label>
+				<label>
+					Lines
+					<input id="exportForeground" type="color" value="#111111" />
+				</label>
+				<label>
+					Nodes
+					<input id="exportNodeBackground" type="color" value="#ffffff" />
+				</label>
+				<label>
+					Text
+					<input id="exportFontColor" type="color" value="#111111" />
+				</label>
 			</div>
 		</div>
 		<div id="container" style="width: 100%; min-height: 100%">
