@@ -32,6 +32,8 @@ function setSvgSize(svgElement, width, height) {
 // For this example, we use the UMD build:
 const Diagram = UMLDiagram;
 const diagram = new Diagram(svgElement);
+const lastEventElement = document.getElementById("last-event");
+const stateOutputElement = document.getElementById("state-output");
 
 // Configure styling
 diagram.setStyle({
@@ -65,10 +67,39 @@ async function initializeDiagram() {
 	const projectData = await loadProjectData();
 	diagram.setData(projectData);
 	diagram.build();
+	renderDiagramState("initial data", diagram.getData());
 }
 
 // Initialize and display Java project structure on page load
 initializeDiagram();
+
+diagram.on("layoutChanged", (data) => {
+	renderDiagramState("layoutChanged", data);
+	console.log("layoutChanged", data);
+});
+
+diagram.on("nodeMoved", ({ node, data }) => {
+	renderDiagramState(`nodeMoved: ${node.id}`, data);
+	console.log("nodeMoved", node, data);
+});
+
+function renderDiagramState(eventName, data) {
+	lastEventElement.textContent = eventName;
+	stateOutputElement.textContent = JSON.stringify(
+		{
+			nodes: data.nodes.map((node) => ({
+				id: node.id,
+				x: node.x,
+				y: node.y,
+				width: node.width,
+				height: node.height,
+			})),
+			links: data.links,
+		},
+		null,
+		2
+	);
+}
 
 // Example: Add items to the diagram (for testing)
 document.getElementById("add").addEventListener("click", () => {

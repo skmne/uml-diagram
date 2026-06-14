@@ -16,6 +16,10 @@ class Diagram {
 	#height;
 	#zoom;
 	#svgElement;
+	#listeners = {
+		layoutChanged: new Set(),
+		nodeMoved: new Set(),
+	};
 	constructor(svgElement) {
 		this.#svgElement = svgElement;
 		this.#svg = select(svgElement);
@@ -29,6 +33,7 @@ class Diagram {
 	addItems(newData) {
 		this.setData(newData);
 		this.recreateDiagram();
+		this.#emitLayoutChanged();
 	}
 
 	removeItems(itemIds) {
@@ -37,6 +42,7 @@ class Diagram {
 			return !(itemIds.includes(link.source) || itemIds.includes(link.target));
 		});
 		this.recreateDiagram();
+		this.#emitLayoutChanged();
 	}
 
 	recreateDiagram() {
@@ -52,6 +58,40 @@ class Diagram {
 		for (const link of data.links) {
 			state.links.push(new Link(link));
 		}
+	}
+
+	getData() {
+		return {
+			nodes: state.nodes.map((node) => this.#createNodeData(node)),
+			links: state.links.map((link) => ({
+				source: link.source,
+				target: link.target,
+				type: link.type,
+			})),
+		};
+	}
+
+	on(eventName, listener) {
+		const listeners = this.#listeners[eventName];
+		if (!listeners) {
+			throw new Error(`Unsupported diagram event: ${eventName}`);
+		}
+		if (typeof listener !== "function") {
+			throw new TypeError("Diagram event listener must be a function");
+		}
+
+		listeners.add(listener);
+		return () => {
+			listeners.delete(listener);
+		};
+	}
+
+	notifyNodeMoved(node) {
+		this.#emit("nodeMoved", () => ({
+			node: this.#createNodeData(node),
+			data: this.getData(),
+		}));
+		this.#emitLayoutChanged();
 	}
 
 	setStyle(style) {
@@ -106,6 +146,27 @@ class Diagram {
 
 	getZoom() {
 		return this.#zoom;
+	}
+
+	#emitLayoutChanged() {
+		this.#emit("layoutChanged", () => this.getData());
+	}
+
+	#emit(eventName, createPayload) {
+		this.#listeners[eventName].forEach((listener) => {
+			listener(createPayload());
+		});
+	}
+
+	#createNodeData(node) {
+		return {
+			id: node.id,
+			name: node.name,
+			x: node.x,
+			y: node.y,
+			width: node.width,
+			height: node.height,
+		};
 	}
 
 	#createGroupContainer(svg) {

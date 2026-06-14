@@ -82,6 +82,58 @@ describe('Diagram', () => {
       // Verify that drag was applied
       expect(drag).toHaveBeenCalledTimes(1);
     });
+
+    it('should return nodes and links with getData', () => {
+      diagram.setData({
+        nodes: [
+          { id: 'n1', name: 'Node 1', x: 10, y: 20, width: 120, height: 60 },
+          { id: 'n2', name: 'Node 2', x: 200, y: 300 },
+        ],
+        links: [{ source: 'n1', target: 'n2', type: 'Association' }],
+      });
+
+      expect(diagram.getData()).toEqual({
+        nodes: [
+          { id: 'n1', name: 'Node 1', x: 10, y: 20, width: 120, height: 60 },
+          { id: 'n2', name: 'Node 2', x: 200, y: 300, width: 100, height: 50 },
+        ],
+        links: [{ source: 'n1', target: 'n2', type: 'Association' }],
+      });
+    });
+
+    it('should return copies instead of internal state references', () => {
+      diagram.setData({
+        nodes: [{ id: 'n1', name: 'Node 1', x: 10, y: 20 }],
+        links: [{ source: 'n1', target: 'n1', type: 'Association' }],
+      });
+
+      const data = diagram.getData();
+      data.nodes[0].x = 999;
+      data.links[0].source = 'changed';
+      data.nodes.push({ id: 'external', name: 'External', x: 0, y: 0, width: 1, height: 1 });
+      data.links.push({ source: 'external', target: 'n1', type: 'External' });
+
+      expect(state.nodes).toHaveLength(1);
+      expect(state.links).toHaveLength(1);
+      expect(state.nodes[0].x).toBe(10);
+      expect(state.links[0].source).toBe('n1');
+    });
+
+    it('should return updated node coordinates from state', () => {
+      diagram.setData({
+        nodes: [{ id: 'n1', name: 'Node 1', x: 10, y: 20 }],
+        links: [],
+      });
+
+      state.nodes[0].x = 300;
+      state.nodes[0].y = 400;
+
+      expect(diagram.getData().nodes[0]).toMatchObject({
+        id: 'n1',
+        x: 300,
+        y: 400,
+      });
+    });
   });
   
   describe('Item Manipulation', () => {
@@ -117,6 +169,88 @@ describe('Diagram', () => {
 
         const linkLines = d3.select(svgElement).selectAll('g.links > line');
         expect(linkLines.size()).toBe(0);
+    });
+  });
+
+  describe('Events', () => {
+    beforeEach(() => {
+      diagram.setData({
+        nodes: [{ id: 'n1', name: 'Node 1', x: 10, y: 20 }],
+        links: [],
+      });
+      diagram.build();
+    });
+
+    it('should call layoutChanged listeners with current data', () => {
+      const listener = jest.fn();
+      diagram.on('layoutChanged', listener);
+
+      diagram.addItems({
+        nodes: [{ id: 'n2', name: 'Node 2', x: 100, y: 120 }],
+        links: [{ source: 'n1', target: 'n2', type: 'Association' }],
+      });
+
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(listener).toHaveBeenCalledWith({
+        nodes: [
+          { id: 'n1', name: 'Node 1', x: 10, y: 20, width: 100, height: 50 },
+          { id: 'n2', name: 'Node 2', x: 100, y: 120, width: 100, height: 50 },
+        ],
+        links: [{ source: 'n1', target: 'n2', type: 'Association' }],
+      });
+    });
+
+    it('should stop calling listeners after unsubscribe', () => {
+      const listener = jest.fn();
+      const unsubscribe = diagram.on('layoutChanged', listener);
+
+      diagram.addItems({
+        nodes: [{ id: 'n2', name: 'Node 2', x: 100, y: 120 }],
+        links: [],
+      });
+      unsubscribe();
+      diagram.removeItems(['n2']);
+
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    it('should pass copies to layoutChanged listeners', () => {
+      const listener = jest.fn((data) => {
+        data.nodes[0].x = 999;
+        data.nodes.push({ id: 'external', name: 'External', x: 0, y: 0, width: 1, height: 1 });
+      });
+      diagram.on('layoutChanged', listener);
+
+      diagram.addItems({
+        nodes: [{ id: 'n2', name: 'Node 2', x: 100, y: 120 }],
+        links: [],
+      });
+
+      expect(state.nodes).toHaveLength(2);
+      expect(state.nodes[0].x).toBe(10);
+    });
+
+    it('should call nodeMoved and layoutChanged with current data after a node move', () => {
+      const nodeMovedListener = jest.fn();
+      const layoutChangedListener = jest.fn();
+      diagram.on('nodeMoved', nodeMovedListener);
+      diagram.on('layoutChanged', layoutChangedListener);
+
+      state.nodes[0].x = 300;
+      state.nodes[0].y = 400;
+      diagram.notifyNodeMoved(state.nodes[0]);
+
+      expect(nodeMovedListener).toHaveBeenCalledWith({
+        node: { id: 'n1', name: 'Node 1', x: 300, y: 400, width: 100, height: 50 },
+        data: {
+          nodes: [{ id: 'n1', name: 'Node 1', x: 300, y: 400, width: 100, height: 50 }],
+          links: [],
+        },
+      });
+      expect(layoutChangedListener).toHaveBeenCalledWith({
+        nodes: [{ id: 'n1', name: 'Node 1', x: 300, y: 400, width: 100, height: 50 }],
+        links: [],
+      });
     });
   });
 

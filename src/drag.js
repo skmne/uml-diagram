@@ -21,8 +21,9 @@ export default function drag(diagram) {
 		diagram.update();
 	}
 
-	function dragended() {
+	function dragended(event, d) {
 		select(this).attr("stroke", "var(--vscode-editor-foreground)");
+		diagram.notifyNodeMoved(d);
 	}
 
 	return d3Drag().on("start", dragstarted).on("drag", dragged).on("end", dragended);

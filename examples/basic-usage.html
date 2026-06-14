@@ -70,6 +70,39 @@
 			top: 15px;
 			right: 15px;
 		}
+		.state-panel {
+			position: fixed;
+			left: 15px;
+			bottom: 15px;
+			width: min(520px, calc(100vw - 30px));
+			max-height: 260px;
+			background: rgba(255, 255, 255, 0.94);
+			border: 1px solid #aab4b8;
+			box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+			font-family: Arial, Helvetica, sans-serif;
+			font-size: 12px;
+			color: #172126;
+			box-sizing: border-box;
+			padding: 10px;
+			overflow: hidden;
+		}
+		.state-panel h2 {
+			margin: 0 0 8px;
+			font-size: 13px;
+			font-weight: 700;
+		}
+		.state-panel .event-line {
+			margin: 0 0 8px;
+		}
+		.state-panel pre {
+			margin: 0;
+			max-height: 190px;
+			overflow: auto;
+			white-space: pre-wrap;
+			font-family: Consolas, "Courier New", monospace;
+			font-size: 11px;
+			line-height: 1.35;
+		}
 		.group-button button {
 			width: 2rem;
 			height: 2rem;
@@ -155,6 +188,11 @@
 		<div id="container" style="width: 100%; min-height: 100%">
 			<svg xmlns="http://www.w3.org/2000/svg" id="uml-diagram"></svg>
 		</div>
+		<section class="state-panel" aria-label="Diagram state">
+			<h2>Diagram state</h2>
+			<p class="event-line">Last event: <strong id="last-event">initializing</strong></p>
+			<pre id="state-output">Move a node or use Add/Remove to see getData() output.</pre>
+		</section>
 	</body>
 
 	<script src="./basic-usage.js" type="module"></script>

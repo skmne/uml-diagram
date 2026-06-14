@@ -124,6 +124,41 @@ diagram.setData({
 });
 ```
 
+#### `getData()`
+
+Get a snapshot of the current diagram data.
+
+The returned object contains copies of nodes and links, so changing it will not mutate the internal diagram state. Node `x` and `y` values reflect the current coordinates, including positions changed by drag-and-drop.
+
+```javascript
+const data = diagram.getData();
+console.log(data.nodes.map(node => ({ id: node.id, x: node.x, y: node.y })));
+```
+
+Returns:
+
+```typescript
+{
+  nodes: [
+    {
+      id: string;
+      name: string;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    },
+  ];
+  links: [
+    {
+      source: string;
+      target: string;
+      type: string;
+    },
+  ];
+}
+```
+
 #### `addItems(data)`
 
 Add new nodes and links to the existing diagram.
@@ -132,6 +167,36 @@ Add new nodes and links to the existing diagram.
 diagram.addItems({
   nodes: [{ id: "NewClass", name: "NewClass" }],
   links: [{ source: "Class1", target: "NewClass", type: "Association" }],
+});
+```
+
+#### `on(eventName, listener)`
+
+Subscribe to diagram events. Returns an unsubscribe function.
+
+Supported events:
+
+- `"layoutChanged"` - emitted after a drag-and-drop move ends, and after `addItems()` or `removeItems()` changes the diagram.
+- `"nodeMoved"` - emitted after a single node drag-and-drop move ends.
+
+```javascript
+const unsubscribe = diagram.on("layoutChanged", (data) => {
+  saveLayout(data.nodes.map(node => ({
+    id: node.id,
+    x: node.x,
+    y: node.y
+  })));
+});
+
+unsubscribe();
+```
+
+`layoutChanged` listeners receive the same data shape as `getData()`. The event is emitted after drag ends, not on every drag tick.
+
+```javascript
+diagram.on("nodeMoved", ({ node, data }) => {
+  console.log(node.id, node.x, node.y);
+  console.log(data.nodes);
 });
 ```
 
