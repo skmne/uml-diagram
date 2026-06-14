@@ -1,6 +1,6 @@
 {
   "name": "@alesik/uml-diagram",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A lightweight JavaScript library for rendering interactive UML class diagrams using D3.js",
   "main": "dist/main.js",
   "module": "dist/main.js",
@@ -30,7 +30,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/skmne/uml-diagram.git"
+    "url": "git+https://github.com/skmne/uml-diagram.git"
   },
   "bugs": {
     "url": "https://github.com/skmne/uml-diagram/issues"

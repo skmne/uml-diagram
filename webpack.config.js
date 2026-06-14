@@ -17,8 +17,8 @@ export default {
 		globalObject: "this",
 		clean: true,
 	},
-	mode: process.env.NODE_ENV || "development",
-	devtool: process.env.NODE_ENV === "production" ? "source-map" : "eval-source-map",
+	mode: "production",
+	devtool: false,
 	externals: {
 		// Mark d3 as external if you want users to provide their own version
 		// Uncomment if you want to bundle d3:
