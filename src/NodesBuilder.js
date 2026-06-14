@@ -136,6 +136,12 @@ export default class NodesBuilder {
 		this.#rectangles.call(_drag);
 	}
 
+	setNodeContextMenu(handler) {
+		this.#nodeGroups.on("contextmenu", function (event, d) {
+			handler(event, d);
+		});
+	}
+
 	#createNodesContainer(rootGroup) {
 		return rootGroup.append("g").attr("class", "nodes");
 	}
@@ -207,6 +213,9 @@ export default class NodesBuilder {
 			.attr("fill", state.style.fontColor)
 			.attr("text-anchor", "middle")
 			.attr("cursor", "text")
+			.attr("pointer-events", "all")
+			.style("user-select", "text")
+			.style("-webkit-user-select", "text")
 			.attr("dx", (d) => {
 				const width = d.width / 2;
 				return width;

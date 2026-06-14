@@ -84,6 +84,24 @@ describe('NodesBuilder', () => {
       expect(firstText.getAttribute('x')).toBe('10');
       expect(firstText.getAttribute('y')).toBe('20');
       expect(firstText.getAttribute('font-family')).toBe('Arial');
+      expect(firstText.getAttribute('cursor')).toBe('text');
+      expect(firstText.getAttribute('pointer-events')).toBe('all');
+      expect(firstText.style.userSelect).toBe('text');
+    });
+
+    it('should truncate long node names and keep the full name in title', () => {
+      const longName = 'VeryLongClassNameThatShouldBeTruncatedForDisplay';
+      document.body.innerHTML = '';
+      const svg = d3.select(document.body).append('svg');
+      rootGroup = svg.append('g');
+      state.nodes = [new Node({ id: 'long-node', name: longName, x: 10, y: 20 })];
+      nodesBuilder.build(rootGroup);
+
+      const text = rootGroup.select('g.nodes > g > text');
+      const title = rootGroup.select('g.nodes > g > title');
+
+      expect(text.text()).toBe(`${longName.substring(0, 30)}...`);
+      expect(title.text()).toBe(longName);
     });
   });
 

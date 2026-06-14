@@ -252,6 +252,49 @@ describe('Diagram', () => {
         links: [],
       });
     });
+
+    it('should call nodeContextMenu listeners with node data', () => {
+      const listener = jest.fn();
+      const event = {
+        preventDefault: jest.fn(),
+        clientX: 100,
+        clientY: 200,
+      };
+      diagram.on('nodeContextMenu', listener);
+
+      diagram.notifyNodeContextMenu(event, state.nodes[0]);
+
+      expect(event.preventDefault).toHaveBeenCalledTimes(1);
+      expect(listener).toHaveBeenCalledWith({
+        node: { id: 'n1', name: 'Node 1', x: 10, y: 20, width: 100, height: 50 },
+        data: {
+          nodes: [{ id: 'n1', name: 'Node 1', x: 10, y: 20, width: 100, height: 50 }],
+          links: [],
+        },
+        event,
+      });
+    });
+
+    it('should not prevent the default context menu without nodeContextMenu listeners', () => {
+      const event = {
+        preventDefault: jest.fn(),
+      };
+
+      diagram.notifyNodeContextMenu(event, state.nodes[0]);
+
+      expect(event.preventDefault).not.toHaveBeenCalled();
+    });
+
+    it('should stop calling nodeContextMenu listeners after unsubscribe', () => {
+      const listener = jest.fn();
+      const unsubscribe = diagram.on('nodeContextMenu', listener);
+
+      diagram.notifyNodeContextMenu({ preventDefault: jest.fn() }, state.nodes[0]);
+      unsubscribe();
+      diagram.notifyNodeContextMenu({ preventDefault: jest.fn() }, state.nodes[0]);
+
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('Styling', () => {

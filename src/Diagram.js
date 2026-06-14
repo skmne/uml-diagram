@@ -19,6 +19,7 @@ class Diagram {
 	#listeners = {
 		layoutChanged: new Set(),
 		nodeMoved: new Set(),
+		nodeContextMenu: new Set(),
 	};
 	constructor(svgElement) {
 		this.#svgElement = svgElement;
@@ -47,6 +48,7 @@ class Diagram {
 
 	recreateDiagram() {
 		this.#nodesBuilder.createNodes();
+		this.#nodesBuilder.setNodeContextMenu((event, node) => this.notifyNodeContextMenu(event, node));
 		this.#linksBuilder.createLinks();
 		this.#nodesBuilder.setDragRectangle(drag(this));
 	}
@@ -94,6 +96,18 @@ class Diagram {
 		this.#emitLayoutChanged();
 	}
 
+	notifyNodeContextMenu(event, node) {
+		if (this.#listeners.nodeContextMenu.size === 0) {
+			return;
+		}
+		event.preventDefault();
+		this.#emit("nodeContextMenu", () => ({
+			node: this.#createNodeData(node),
+			data: this.getData(),
+			event,
+		}));
+	}
+
 	setStyle(style) {
 		state.style.nodeForeground = style.nodeForeground
 			? this.#converCSSVarToValue(style.nodeForeground)
@@ -133,6 +147,7 @@ class Diagram {
 	build() {
 		const rootGroupContainer = this.#createGroupContainer(this.#svg);
 		this.#nodesBuilder.build(rootGroupContainer);
+		this.#nodesBuilder.setNodeContextMenu((event, node) => this.notifyNodeContextMenu(event, node));
 		this.#nodesBuilder.setDragRectangle(drag(this));
 		this.#linksBuilder = new LinksBuilder();
 		this.#linksBuilder.build(rootGroupContainer);

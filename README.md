@@ -196,6 +196,7 @@ Supported events:
 
 - `"layoutChanged"` - emitted after a drag-and-drop move ends, and after `addItems()` or `removeItems()` changes the diagram.
 - `"nodeMoved"` - emitted after a single node drag-and-drop move ends.
+- `"nodeContextMenu"` - emitted after right-clicking a node.
 
 ```javascript
 const unsubscribe = diagram.on("layoutChanged", (data) => {
@@ -215,6 +216,12 @@ unsubscribe();
 diagram.on("nodeMoved", ({ node, data }) => {
   console.log(node.id, node.x, node.y);
   console.log(data.nodes);
+});
+
+diagram.on("nodeContextMenu", ({ node, data, event }) => {
+  console.log(node.id, node);
+  console.log(data.nodes);
+  console.log(event.clientX, event.clientY);
 });
 ```
 

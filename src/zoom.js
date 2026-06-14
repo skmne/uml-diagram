@@ -11,6 +11,12 @@ export default class Zoom {
 		this.#height = height;
 		this.#zoom = d3Zoom()
 			.scaleExtent([0.25, 10])
+			.filter((event) => {
+				if (event.target?.closest?.("text")) {
+					return false;
+				}
+				return (!event.ctrlKey || event.type === "wheel") && !event.button;
+			})
 			.on("zoom", (e) => {
 				this.#svg.select("g").attr("transform", e.transform);
 			})

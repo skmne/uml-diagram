@@ -83,6 +83,14 @@ diagram.on("nodeMoved", ({ node, data }) => {
 	console.log("nodeMoved", node, data);
 });
 
+diagram.on("nodeContextMenu", ({ node, data, event }) => {
+	renderDiagramState(`nodeContextMenu: ${node.id}`, data);
+	console.log("nodeContextMenu", node, data, {
+		x: event.clientX,
+		y: event.clientY,
+	});
+});
+
 function renderDiagramState(eventName, data) {
 	lastEventElement.textContent = eventName;
 	stateOutputElement.textContent = JSON.stringify(
@@ -118,10 +126,29 @@ document.getElementById("add").addEventListener("click", () => {
 	diagram.addItems(newData);
 });
 
+document.getElementById("addLong").addEventListener("click", () => {
+	const newData = {
+		nodes: [
+			{
+				namespace: "com.example.longnames",
+				name: "VeryLongClassNameThatShouldBeTruncatedForDisplayAndSelectableInTheDiagram",
+				id: "VeryLongClassNameThatShouldBeTruncatedForDisplayAndSelectableInTheDiagram",
+				width: 260,
+				height: 80,
+			},
+		],
+		links: [],
+	};
+	diagram.addItems(newData);
+});
+
 // Example: Remove items from the diagram
 document.getElementById("remove").addEventListener("click", () => {
 	// Remove last added test class if exists
-	diagram.removeItems(["TestClass"]);
+	diagram.removeItems([
+		"TestClass",
+		"VeryLongClassNameThatShouldBeTruncatedForDisplayAndSelectableInTheDiagram",
+	]);
 });
 
 // Zoom controls
