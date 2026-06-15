@@ -15,18 +15,38 @@
 			--vscode-editor-background: #bfcace;
 			--vscode-button-foreground: #f7f8f8;
 			--vscode-button-background: #2eb3dba6;
+			--vscode-button-border: transparent;
 			--vscode-font-family: "Arial, Helvetica, sans-serif";
-			--vscode-font-size: 15sp;
+			--vscode-font-size: 15px;
+			--vscode-font-weight: 400;
 			--vscode-button-hoverBackground: #0a6786;
+			--vscode-focusBorder: #007fd4;
+			--vscode-input-background: #ffffff;
+			--vscode-input-foreground: #0f0f0f;
+			--vscode-input-border: #8a969b;
+			--vscode-panel-background: rgba(255, 255, 255, 0.94);
+			--vscode-panel-border: #aab4b8;
+			--vscode-widget-shadow: rgba(0, 0, 0, 0.12);
 		}
 
-		a {
+		body {
+			height: calc(100vh);
+			margin: 0;
+			background: var(--vscode-editor-background);
+			color: var(--vscode-editor-foreground);
+			font-family: var(--vscode-font-family);
+			font-weight: var(--vscode-font-weight);
+			font-size: var(--vscode-font-size);
+		}
+
+		.group-button a,
+		.group-button button {
 			color: var(--vscode-button-foreground);
 			background: var(--vscode-button-background);
 			font-family: var(--vscode-font-family);
 			font-weight: var(--vscode-font-weight);
 			font-size: var(--vscode-font-size);
-			padding: 4px;
+			border: 1px solid var(--vscode-button-border);
 			border-radius: 2px;
 			box-sizing: border-box;
 			text-align: center;
@@ -38,10 +58,19 @@
 			height: 2rem;
 			text-decoration: none;
 			user-select: none;
+			outline: none;
+			padding: 4px;
 		}
-		a:hover {
+		.group-button a:hover,
+		.group-button button:hover {
 			background: var(--vscode-button-hoverBackground);
 			color: var(--vscode-button-foreground);
+		}
+		.group-button a:focus-visible,
+		.group-button button:focus-visible,
+		.export-colors input:focus-visible {
+			outline: 1px solid var(--vscode-focusBorder);
+			outline-offset: 2px;
 		}
 		#container {
 			width: 100%;
@@ -60,10 +89,6 @@
 			background-size: 4px 4px, 4px 4px, 80px 80px, 80px 80px, 80px 80px, 80px 80px, 80px 80px, 80px 80px;
 		}
 
-		body {
-			height: calc(100vh);
-			margin: 0;
-		}
 		html {
 			overflow: hidden;
 		}
@@ -81,12 +106,12 @@
 			bottom: 15px;
 			width: min(520px, calc(100vw - 30px));
 			max-height: 260px;
-			background: rgba(255, 255, 255, 0.94);
-			border: 1px solid #aab4b8;
-			box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
-			font-family: Arial, Helvetica, sans-serif;
+			background: var(--vscode-panel-background);
+			border: 1px solid var(--vscode-panel-border);
+			box-shadow: 0 4px 18px var(--vscode-widget-shadow);
+			font-family: var(--vscode-font-family);
 			font-size: 12px;
-			color: #172126;
+			color: var(--vscode-editor-foreground);
 			box-sizing: border-box;
 			padding: 10px;
 			overflow: hidden;
@@ -112,13 +137,7 @@
 			width: 2rem;
 			height: 2rem;
 			display: block;
-			border-width: 1px;
-			background-color: var(--vscode-button-background);
 			fill: var(--vscode-button-foreground);
-		}
-		.group-button button:hover {
-			background: var(--vscode-button-hoverBackground);
-			cursor: pointer !important;
 		}
 		.group-button button:first-child {
 			border-top-left-radius: 15%;
@@ -130,20 +149,18 @@
 			border-bottom-right-radius: 15%;
 			border-top-width: 0;
 		}
-		button {
-			border: 0;
-		}
 		.zoom {
 			padding-top: 16px;
 		}
 		.export-colors {
 			margin-top: 20px;
 			padding: 8px;
-			background: rgba(255, 255, 255, 0.92);
-			border: 1px solid #aab4b8;
-			font-family: Arial, Helvetica, sans-serif;
+			background: var(--vscode-panel-background);
+			border: 1px solid var(--vscode-panel-border);
+			box-shadow: 0 4px 18px var(--vscode-widget-shadow);
+			font-family: var(--vscode-font-family);
 			font-size: 11px;
-			color: #172126;
+			color: var(--vscode-editor-foreground);
 		}
 		.export-colors button {
 			margin-bottom: 8px;
@@ -159,8 +176,9 @@
 			width: 28px;
 			height: 24px;
 			padding: 0;
-			border: 1px solid #8a969b;
-			background: transparent;
+			border: 1px solid var(--vscode-input-border);
+			background: var(--vscode-input-background);
+			color: var(--vscode-input-foreground);
 		}
 	</style>
 
