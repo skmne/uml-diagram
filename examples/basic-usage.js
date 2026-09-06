@@ -31,9 +31,12 @@ function setSvgSize(svgElement, width, height) {
 // When using from npm: import Diagram from '@alesik/uml-diagram';
 // For this example, we use the UMD build:
 const Diagram = UMLDiagram;
-const diagram = new Diagram(svgElement);
+const diagram = new Diagram(svgElement, { highlightIncidentLinksOnClick: true });
+export { diagram };
 const lastEventElement = document.getElementById("last-event");
 const stateOutputElement = document.getElementById("state-output");
+const classList = document.getElementById("highlight-classes");
+const highlightStatus = document.getElementById("highlight-status");
 
 // Configure styling
 diagram.setStyle({
@@ -43,6 +46,10 @@ diagram.setStyle({
 	fontSize: "12px",
 	fontColor: "var(--vscode-editor-foreground)",
 	nodeWidth: 200,
+	highlightNodeOutline: "var(--highlight-accent)",
+	highlightNodeFill: "var(--highlight-fill)",
+	highlightLinkColor: "var(--highlight-accent)",
+	highlightStrokeWidth: 3,
 });
 
 // Load project data from separate data structure file
@@ -67,6 +74,7 @@ async function initializeDiagram() {
 	const projectData = await loadProjectData();
 	diagram.setData(projectData);
 	diagram.build();
+	updateClassList();
 	renderDiagramState("initial data", diagram.getData());
 }
 
@@ -74,6 +82,7 @@ async function initializeDiagram() {
 initializeDiagram();
 
 diagram.on("layoutChanged", (data) => {
+	updateClassList();
 	renderDiagramState("layoutChanged", data);
 	console.log("layoutChanged", data);
 });
@@ -90,6 +99,26 @@ diagram.on("nodeContextMenu", ({ node, data, event }) => {
 		y: event.clientY,
 	});
 });
+
+function updateClassList() {
+	const selected = new Set(diagram.getHighlight().nodeIds);
+	classList.replaceChildren(...diagram.getData().nodes.map((node) =>
+		new Option(node.name, node.id, false, selected.has(node.id))));
+}
+
+classList.addEventListener("change", () => {
+	diagram.setHighlight({ nodeIds: [...classList.selectedOptions].map((option) => option.value), includeIncidentLinks: true });
+});
+
+diagram.on("highlightChanged", ({ nodeIds, links, reason }) => {
+	// Updating selected properties does not dispatch another change event.
+	for (const option of classList.options) option.selected = nodeIds.includes(option.value);
+	highlightStatus.textContent = `${nodeIds.length} classes, ${links.length} links (${reason})`;
+});
+
+const addedClassIds = [];
+let testClassNumber = 0;
+let longClassNumber = 0;
 
 function renderDiagramState(eventName, data) {
 	lastEventElement.textContent = eventName;
@@ -111,44 +140,47 @@ function renderDiagramState(eventName, data) {
 
 // Example: Add items to the diagram (for testing)
 document.getElementById("add").addEventListener("click", () => {
+	const id = `TestClass${++testClassNumber}`;
+	const source = diagram.getData().nodes[0]?.id;
 	const newData = {
 		nodes: [
 			{
 				namespace: "com.example.test",
-				name: "TestClass",
-				id: "TestClass",
+				name: id,
+				id,
 				width: 220,
 				height: 80,
 			},
 		],
-		links: [],
+		links: source ? [{ source, target: id, type: "Directed Association" }] : [],
 	};
-	diagram.addItems(newData);
+	diagram.addItems(newData, { highlight: true });
+	addedClassIds.push(id);
 });
 
 document.getElementById("addLong").addEventListener("click", () => {
+	const name = "VeryLongClassNameThatShouldBeTruncatedForDisplayAndSelectableInTheDiagram";
+	const id = `${name}${++longClassNumber}`;
+	const source = diagram.getData().nodes[0]?.id;
 	const newData = {
 		nodes: [
 			{
 				namespace: "com.example.longnames",
-				name: "VeryLongClassNameThatShouldBeTruncatedForDisplayAndSelectableInTheDiagram",
-				id: "VeryLongClassNameThatShouldBeTruncatedForDisplayAndSelectableInTheDiagram",
+				name,
+				id,
 				width: 260,
 				height: 80,
 			},
 		],
-		links: [],
+		links: source ? [{ source, target: id, type: "Directed Association" }] : [],
 	};
-	diagram.addItems(newData);
+	diagram.addItems(newData, { highlight: true });
+	addedClassIds.push(id);
 });
 
 // Example: Remove items from the diagram
 document.getElementById("remove").addEventListener("click", () => {
-	// Remove last added test class if exists
-	diagram.removeItems([
-		"TestClass",
-		"VeryLongClassNameThatShouldBeTruncatedForDisplayAndSelectableInTheDiagram",
-	]);
+	diagram.removeItems(addedClassIds.splice(0));
 });
 
 // Zoom controls
@@ -166,6 +198,7 @@ document.getElementById("resetZoom").addEventListener("click", () => {
 
 // Keyboard navigation (WASD + Space)
 document.addEventListener("keydown", function (event) {
+	if (event.target.closest("input, select, button, textarea, [contenteditable]")) return;
 	switch (event.keyCode) {
 		case 65: // 'A' - Pan left
 			diagram.getZoom().panLeft();

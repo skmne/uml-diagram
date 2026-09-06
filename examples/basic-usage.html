@@ -11,6 +11,8 @@
 	<script src="../dist/main.js"></script>
 	<style>
 		:root {
+			--highlight-accent: #2563eb;
+			--highlight-fill: #dbeafe;
 			--vscode-editor-foreground: #0f0f0f;
 			--vscode-editor-background: #bfcace;
 			--vscode-button-foreground: #f7f8f8;
@@ -29,6 +31,22 @@
 			--vscode-widget-shadow: rgba(0, 0, 0, 0.12);
 		}
 
+		@media (prefers-color-scheme: dark) {
+			:root { --highlight-accent: #93c5fd; --highlight-fill: #1e3a5f; }
+		}
+		.highlight-panel {
+			position: fixed;
+			top: 15px;
+			left: 15px;
+			width: 240px;
+			padding: 12px;
+			box-sizing: border-box;
+			background: var(--vscode-panel-background);
+			border: 1px solid var(--vscode-panel-border);
+			z-index: 1;
+		}
+		.highlight-panel select { width: 100%; height: 120px; margin-top: 8px; }
+		.highlight-panel p, .highlight-panel output { font-size: 12px; }
 		body {
 			height: calc(100vh);
 			margin: 0;
@@ -217,7 +235,7 @@
 			</div>
 			<div style="padding-top: 30px">
 				<div style="padding-bottom: 10px">
-					<a id="add" title="Add test class" aria-label="Add test class">+</a>
+					<a id="add" title="Add and highlight a class with a link" aria-label="Add and highlight a class with a link">+</a>
 				</div>
 				<div style="padding-bottom: 10px">
 					<a id="addLong" title="Add class with a long name">+...</a>
@@ -254,7 +272,13 @@
 				</label>
 			</div>
 		</div>
-		<div id="container" style="width: 100%; min-height: 100%">
+		<aside class="highlight-panel" aria-label="Class selection">
+			<label for="highlight-classes">Highlight classes</label>
+			<select id="highlight-classes" multiple aria-describedby="highlight-help"></select>
+			<p id="highlight-help">Click a class to highlight it and its incoming/outgoing links. Shift+click adds or removes classes; Shift+click a link toggles it separately. Use + to add a highlighted dependency. Click empty canvas to clear. Drag, pan and zoom preserve highlighting.</p>
+			<output id="highlight-status" aria-live="polite">Nothing highlighted</output>
+		</aside>
+		<div id="container" style="width: calc(100% - 270px); margin-left: 270px; min-height: 100%">
 			<svg xmlns="http://www.w3.org/2000/svg" id="uml-diagram"></svg>
 		</div>
 		<section class="state-panel" aria-label="Diagram state">

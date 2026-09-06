@@ -73,6 +73,16 @@ const diagram = new Diagram(svgElement);
 
 - `svgElement` - An SVG DOM element where the diagram will be rendered
 
+An optional second argument configures interaction for this instance:
+
+```javascript
+const diagram = new Diagram(svgElement, {
+  highlightIncidentLinksOnClick: true, // Default: false
+});
+```
+
+When enabled, clicking a class selects its incoming/outgoing links too. With the default `false`, a class click selects only that class. This flag does not affect direct link clicks, `setHighlight({ includeIncidentLinks: true })`, or `addItems(data, { highlight: true })`.
+
 ### Methods
 
 #### `setStyle(style)`
@@ -160,13 +170,74 @@ Returns:
 }
 ```
 
+#### `setHighlight(selection)`, `clearHighlight()`, `getHighlight()`
+
+Highlight a temporary selection without changing data, layout, or persistent styling:
+
+```javascript
+diagram.setHighlight({
+  nodeIds: ['Service', 'pkg.Logger'],
+  links: [{ source: 'Service', target: 'pkg.Logger', type: 'Directed Association' }],
+  includeIncidentLinks: false,
+});
+const selection = diagram.getHighlight(); // { nodeIds, links }; fresh arrays and objects
+diagram.clearHighlight();
+```
+
+Each call replaces the previous selection. Unknown/removed items are ignored and duplicates are deduplicated. Empty input (including `setHighlight()`) clears the selection. Nodes use their stable IDs, never display names. Links have no separate ID in this library: their identity is the exact directed tuple `(source, target, type)`. Different relationship types and reverse links remain distinct; duplicate links with the same tuple are highlighted together.
+
+`includeIncidentLinks: true` selects all incoming and outgoing links touching the selected nodes, without selecting neighboring nodes. Explicit links work even with an empty `nodeIds` list. Incident links are resolved when `setHighlight` is called; newly inserted links are not automatically selected later.
+
+A click on a node (including its text) selects that node; if the constructor option `highlightIncidentLinksOnClick` is `true`, it also selects all incoming/outgoing links. A click on a link selects only that link. Shift+click adds or removes items from the current selection. With the flag enabled, selecting a node includes its incident links and deselecting it removes those links except ones touching another selected node. With the flag disabled, Shift+click on a node leaves selected links unchanged. Shift+click on a link always toggles that link independently. A plain click on empty SVG canvas clears highlighting; Shift+click on empty canvas leaves it unchanged. External controls, context menus, node dragging, panning and zooming preserve the selection. There is no timeout. Highlighting survives redraws and `addItems`; `removeItems` prunes removed nodes and their links. It is excluded from `getData()`, `layoutChanged` payloads and SVG export, and highlighting alone never emits `layoutChanged`. Programmatic `setHighlight` continues to use the explicit `includeIncidentLinks` option (default `false`).
+
+Configure highlights through the existing style API:
+
+```javascript
+diagram.setStyle({
+  highlightNodeOutline: 'var(--diagram-accent, #2563eb)',
+  highlightNodeFill: null, // Optional subtle fill; null preserves the normal fill
+  highlightLinkColor: 'var(--diagram-accent, #2563eb)',
+  highlightStrokeWidth: 3,
+});
+```
+
+Defaults are `#2563eb` for outline/link color, `null` for fill and `3` for stroke width. Highlight color values retain CSS variables, so variables inherited by the SVG can respond to light/dark themes without resetting the selection. A supplied node fill retains the normal fill opacity. Clearing restores the original item styles; calling `setStyle` while selected updates the underlying default theme as usual.
+
+Subscribe with the existing event API:
+
+```javascript
+const unsubscribe = diagram.on('highlightChanged', ({ nodeIds, links, reason }) => {
+  // Synchronize your sidebar selection here without dispatching its selection action again.
+  sidebar.setSelectedIds(nodeIds);
+});
+```
+
+Events are synchronous and fire only when the effective set changes, irrespective of input ordering or duplicates. Reasons are `api` (`setHighlight`/`clearHighlight` or highlighted addition), `click` (node/link click or Shift+click), `background` (empty canvas click), and `removal` (deleted items pruned during redraw). Every listener receives its own snapshot. Reapplying the same effective selection emits nothing, preventing feedback loops; a sidebar should still avoid writing a different selection back from its event handler. Call the returned function to unsubscribe.
+
+To highlight only newly expanded dependencies, compute the difference **before** inserting:
+
+```javascript
+const key = ({ source, target, type }) => JSON.stringify([source, target, type]);
+const before = diagram.getData();
+const knownNodes = new Set(before.nodes.map(node => node.id));
+const knownLinks = new Set(before.links.map(key));
+const added = {
+  nodes: expanded.nodes.filter(node => !knownNodes.has(node.id)),
+  links: expanded.links.filter(link => !knownLinks.has(key(link))),
+};
+diagram.addItems(added);
+diagram.setHighlight({ nodeIds: added.nodes.map(node => node.id), links: added.links });
+```
+
+The consumer should also deduplicate its incoming batch and ensure link endpoints exist. `addItems` does not automatically highlight unless explicitly requested with `{ highlight: true }`, so initial diagram restoration stays unselected. The existing library stores diagram data/default styles in a singleton; highlighting is instance-local, but this change does not make multiple diagrams' data independent.
+
 #### `exportSvg(style)`
 
 Export the diagram SVG as a string. By default, export fits the SVG `viewBox`, `width`, and `height` to the full diagram content, so nodes outside the current viewport and the current zoom/pan transform do not crop the exported SVG.
 
 Pass optional export-only colors to serialize the diagram differently from the on-screen theme.
 
-The export style is temporary: the rendered diagram is restored after the SVG string is created.
+Export operates on a detached SVG copy: it never changes the rendered diagram or its highlighting. Temporary highlights are always omitted; there is no `includeHighlight` option.
 
 ```javascript
 const svgString = diagram.exportSvg({
@@ -195,7 +266,7 @@ const svg = diagram.exportSvg({
 });
 ```
 
-#### `addItems(data)`
+#### `addItems(data, options?)`
 
 Add new nodes and links to the existing diagram.
 
@@ -206,12 +277,36 @@ diagram.addItems({
 });
 ```
 
+The optional settings object defaults to `{ highlight: false }`. Pass `highlight: true` to replace the selection with the new node IDs and link identities in this insertion:
+
+```javascript
+diagram.addItems({
+  nodes: [{ id: 'Logger', name: 'Logger' }],
+  links: [{ source: 'Service', target: 'Logger', type: 'Directed Association' }],
+}, { highlight: true });
+```
+
+A settings class is also available. Both forms have the same behavior:
+
+```javascript
+import Diagram, { AddItemsOptions } from '@alesik/uml-diagram';
+
+const options = new AddItemsOptions({ highlight: true });
+diagram.addItems(newData, options);
+
+// With the browser UMD build, the class is available on the constructor:
+const browserOptions = new UMLDiagram.AddItemsOptions({ highlight: true });
+```
+
+Only identities absent before insertion are highlighted. Duplicate existing IDs/links are not considered new; an empty addition or a batch with no new identities preserves the previous selection. This option does not deduplicate the inserted data or change existing append behavior. The highlight event (reason `api`) occurs after rendering and before the usual `layoutChanged` event. Settings are not stored in nodes, links or exported data. Existing calls with one argument preserve highlighting as before.
+
 #### `on(eventName, listener)`
 
 Subscribe to diagram events. Returns an unsubscribe function.
 
 Supported events:
 
+- `"highlightChanged"` - emitted when the effective temporary node/link selection changes; see highlighting above.
 - `"layoutChanged"` - emitted after a drag-and-drop move ends, and after `addItems()` or `removeItems()` changes the diagram.
 - `"nodeMoved"` - emitted after a single node drag-and-drop move ends.
 - `"nodeContextMenu"` - emitted after right-clicking a node.
@@ -300,7 +395,7 @@ zoom.center();
 
 See the `examples/` directory for complete working examples:
 
-- `basic-usage.html` - Basic setup and usage
+- `basic-usage.html` - Setup, add-and-highlight dependencies, external multi-class selection, clearing on empty canvas, zoom and export. Serve the repository over HTTP so its ES modules can load.
 
 ![more examples](image.png)
 
@@ -318,7 +413,15 @@ npm run build
 
 # Watch mode
 npm run watch
+
+# Unit tests
+npm test -- --runInBand
+
+# Browser tests (builds first; requires locally installed Google Chrome)
+npm run test:browser
 ```
+
+Browser tests use Playwright as a development dependency only. Set `PLAYWRIGHT_CHANNEL=msedge` to use installed Edge instead. The test server binds to a temporary port on `127.0.0.1` and serves the basic usage example.
 
 ## Browser Support
 
@@ -341,6 +444,17 @@ MIT License - see [LICENSE](LICENSE) file for details.
 Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Changelog
+
+### Unreleased
+- Make incident-link selection on class clicks opt-in with the instance option `highlightIncidentLinksOnClick` (default `false`); enable it explicitly in basic usage.
+- Support click selection and Shift+click toggling of nodes and links.
+- Add optional `addItems(data, { highlight: true })` behavior and the `AddItemsOptions` settings class.
+- Avoid emitting node movement/layout events for clicks without dragging.
+- Add temporary node/link highlighting and `highlightChanged` events.
+- Preserve highlight state through redraw, drag and zoom; clear on an empty canvas click.
+- Export SVG from a detached copy with temporary highlighting omitted.
+- Demonstrate highlighting and external selection in basic usage; add unit/browser coverage.
+- Remove VS Code-specific stroke overrides from node dragging.
 
 ### 0.1.0
 - Initial release

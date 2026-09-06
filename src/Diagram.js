@@ -7,8 +7,11 @@ import Zoom from "./zoom.js";
 import state from "./GlobalState.js";
 import Link from "./Link.js";
 import Node from "./Node.js";
+import Highlight, { highlightDefaults, linkKey } from "./Highlight.js";
+import AddItemsOptions from "./AddItemsOptions.js";
 
 class Diagram {
+	static AddItemsOptions = AddItemsOptions;
 	#nodesBuilder;
 	#linksBuilder;
 	#svg;
@@ -17,12 +20,14 @@ class Diagram {
 	#zoom;
 	#svgElement;
 	#rootGroup;
+	#highlight;
 	#listeners = {
+		highlightChanged: new Set(),
 		layoutChanged: new Set(),
 		nodeMoved: new Set(),
 		nodeContextMenu: new Set(),
 	};
-	constructor(svgElement) {
+	constructor(svgElement, options = {}) {
 		this.#svgElement = svgElement;
 		this.#svg = select(svgElement);
 		this.#width = svgElement.getAttribute("width");
@@ -31,10 +36,37 @@ class Diagram {
 		state.height = this.#height;
 		this.#nodesBuilder = new NodesBuilder(this.#width);
 		this.#zoom = new Zoom(this.#svg, this.#width, this.#height);
+		this.#highlight = new Highlight(svgElement, (reason) => {
+			this.#emit("highlightChanged", () => ({ ...this.getHighlight(), reason }));
+		}, options?.highlightIncidentLinksOnClick === true);
 	}
-	addItems(newData) {
+
+	setHighlight(selection = {}) {
+		this.#highlight.set(selection);
+	}
+
+	clearHighlight() {
+		this.#highlight.set({});
+	}
+
+	getHighlight() {
+		return this.#highlight.get();
+	}
+	addItems(newData, options = {}) {
+		let addedHighlight;
+		if (options?.highlight === true) {
+			const knownNodes = new Set(state.nodes.map((node) => node.id));
+			const knownLinks = new Set(state.links.map(linkKey));
+			addedHighlight = {
+				nodeIds: newData.nodes.filter((node) => !knownNodes.has(node.id)).map((node) => node.id),
+				links: newData.links.filter((link) => !knownLinks.has(linkKey(link))),
+			};
+		}
 		this.setData(newData);
 		this.recreateDiagram();
+		if (addedHighlight && (addedHighlight.nodeIds.length || addedHighlight.links.length)) {
+			this.setHighlight(addedHighlight);
+		}
 		this.#emitLayoutChanged();
 	}
 
@@ -48,10 +80,12 @@ class Diagram {
 	}
 
 	recreateDiagram() {
+		this.#highlight.restore();
 		this.#nodesBuilder.createNodes();
 		this.#nodesBuilder.setNodeContextMenu((event, node) => this.notifyNodeContextMenu(event, node));
 		this.#linksBuilder.createLinks();
 		this.#nodesBuilder.setDragRectangle(drag(this));
+		this.#highlight.set(this.getHighlight(), "removal");
 	}
 
 	setData(data) {
@@ -110,6 +144,10 @@ class Diagram {
 	}
 
 	setStyle(style) {
+		this.#highlight.restore();
+		for (const key of Object.keys(highlightDefaults)) {
+			if (Object.prototype.hasOwnProperty.call(style, key)) state.style[key] = style[key];
+		}
 		state.style.nodeForeground = style.nodeForeground
 			? this.#converCSSVarToValue(style.nodeForeground)
 			: state.style.nodeForeground;
@@ -126,6 +164,7 @@ class Diagram {
 		state.style.nodeWidth = style.nodeWidth ? style.nodeWidth : state.style.nodeWidth;
 		state.style.nodeHeight = style.nodeHeight ? style.nodeHeight : state.style.nodeHeight;
 		this.#updateRenderedStyle();
+		this.#highlight.render();
 
 		// state.style.nodeBackground = getComputedStyle(document.documentElement, null).getPropertyValue(
 		// 	state.style.nodeBackground
@@ -146,6 +185,8 @@ class Diagram {
 	}
 
 	build() {
+		this.#highlight.restore();
+		if (this.#rootGroup) this.#rootGroup.remove();
 		const rootGroupContainer = this.#createGroupContainer(this.#svg);
 		this.#rootGroup = rootGroupContainer;
 		this.#nodesBuilder.build(rootGroupContainer);
@@ -153,6 +194,7 @@ class Diagram {
 		this.#nodesBuilder.setDragRectangle(drag(this));
 		this.#linksBuilder = new LinksBuilder();
 		this.#linksBuilder.build(rootGroupContainer);
+		this.#highlight.set(this.getHighlight(), "removal");
 
 		// this.#generateSimulation(state.nodes);
 	}
@@ -168,36 +210,47 @@ class Diagram {
 
 	exportSvg(style = {}) {
 		style = style || {};
-		const originalStyle = this.#getStyleSnapshot();
-		const originalSvgAttributes = this.#getSvgAttributesSnapshot();
+		const clone = this.#svgElement.cloneNode(true);
+		this.#highlight.stripFromClone(clone);
+		const svg = select(clone);
 		const rootGroup = this.#getRootGroup();
-		const originalRootTransform = rootGroup ? rootGroup.attr("transform") : null;
-		const exportBackground = style.background || style.svgBackground;
-		const hasExportStyle = Object.keys(style).length > 0;
-		const fitContent = style.fitContent !== false;
-		if (hasExportStyle) {
-			this.setStyle(style);
-		}
-		let backgroundRect = null;
-
-		try {
-			const exportArea = fitContent
-				? this.#fitSvgToContent(rootGroup, this.#getExportPadding(style))
-				: this.#getCurrentViewportArea();
-			backgroundRect = exportBackground ? this.#createExportBackground(exportBackground, exportArea) : null;
-			return new XMLSerializer().serializeToString(this.#svgElement);
-		} finally {
-			if (backgroundRect) {
-				backgroundRect.remove();
-			}
-			if (rootGroup) {
-				rootGroup.attr("transform", originalRootTransform);
-			}
-			this.#restoreSvgAttributes(originalSvgAttributes);
-			if (hasExportStyle) {
-				this.setStyle(originalStyle);
+		let area = this.#getCurrentViewportArea();
+		if (style.fitContent !== false && rootGroup) {
+			svg.select("g").attr("transform", null);
+			try {
+				// getBBox uses local coordinates, irrespective of the group's pan/zoom transform.
+				const box = rootGroup.node().getBBox();
+				if ([box.x, box.y, box.width, box.height].every(Number.isFinite)) {
+					const padding = this.#getExportPadding(style);
+					area = { x: box.x - padding, y: box.y - padding,
+						width: box.width + padding * 2, height: box.height + padding * 2 };
+					svg.attr("width", area.width).attr("height", area.height)
+						.attr("viewBox", `${area.x} ${area.y} ${area.width} ${area.height}`);
+				}
+			} catch {
+				// Detached or non-browser SVG implementations may not support getBBox.
 			}
 		}
+		const overrides = [
+			["g.nodes > g > rect", "stroke", "nodeForeground"],
+			["g.nodes > g > rect", "fill", "nodeBackground"],
+			["g.links > line", "stroke", "nodeForeground"],
+			["marker#standard-arrow path", "fill", "nodeForeground"],
+			["marker#inheritance-arrow path", "stroke", "nodeForeground"],
+			["g.nodes text", "fill", "fontColor"],
+			["g.nodes text", "font-family", "fontFamily"],
+			["g.nodes text", "font-size", "fontSize"],
+		];
+		for (const [selector, attribute, key] of overrides) {
+			if (style[key]) svg.selectAll(selector).attr(attribute, this.#converCSSVarToValue(style[key]));
+		}
+		const background = style.background || style.svgBackground;
+		if (background) {
+			const rect = svg.insert("rect", ":first-child").attr("data-uml-export-background", "true")
+				.attr("fill", this.#converCSSVarToValue(background));
+			Object.entries(area).forEach(([key, value]) => rect.attr(key, value));
+		}
+		return new XMLSerializer().serializeToString(clone);
 	}
 
 	#emitLayoutChanged() {
@@ -229,24 +282,6 @@ class Diagram {
 		return Math.sqrt(Math.pow(state.style.nodeWidth, 2) + Math.pow(state.style.nodeHeight, 2));
 	}
 
-	#getStyleSnapshot() {
-		return { ...state.style };
-	}
-
-	#getSvgAttributesSnapshot() {
-		return {
-			width: this.#svg.attr("width"),
-			height: this.#svg.attr("height"),
-			viewBox: this.#svg.attr("viewBox"),
-		};
-	}
-
-	#restoreSvgAttributes(attributes) {
-		Object.entries(attributes).forEach(([name, value]) => {
-			this.#svg.attr(name, value);
-		});
-	}
-
 	#getRootGroup() {
 		if (this.#rootGroup) {
 			return this.#rootGroup;
@@ -263,41 +298,6 @@ class Diagram {
 
 		const padding = Number(style.padding);
 		return Number.isFinite(padding) ? Math.max(0, padding) : 24;
-	}
-
-	#fitSvgToContent(rootGroup, padding) {
-		if (!rootGroup) {
-			return this.#getCurrentViewportArea();
-		}
-
-		rootGroup.attr("transform", null);
-		const rootNode = rootGroup.node();
-		if (!rootNode || typeof rootNode.getBBox !== "function") {
-			return this.#getCurrentViewportArea();
-		}
-
-		let box;
-		try {
-			box = rootNode.getBBox();
-		} catch {
-			return this.#getCurrentViewportArea();
-		}
-		if (![box.x, box.y, box.width, box.height].every(Number.isFinite)) {
-			return this.#getCurrentViewportArea();
-		}
-
-		const exportArea = {
-			x: box.x - padding,
-			y: box.y - padding,
-			width: box.width + padding * 2,
-			height: box.height + padding * 2,
-		};
-		this.#svg
-			.attr("width", exportArea.width)
-			.attr("height", exportArea.height)
-			.attr("viewBox", `${exportArea.x} ${exportArea.y} ${exportArea.width} ${exportArea.height}`);
-
-		return exportArea;
 	}
 
 	#getCurrentViewportArea() {
@@ -320,17 +320,6 @@ class Diagram {
 			width: Number(this.#svg.attr("width") || this.#width),
 			height: Number(this.#svg.attr("height") || this.#height),
 		};
-	}
-
-	#createExportBackground(background, exportArea) {
-		return this.#svg
-			.insert("rect", ":first-child")
-			.attr("data-uml-export-background", "true")
-			.attr("x", exportArea.x)
-			.attr("y", exportArea.y)
-			.attr("width", exportArea.width)
-			.attr("height", exportArea.height)
-			.attr("fill", this.#converCSSVarToValue(background));
 	}
 
 	#updateRenderedStyle() {

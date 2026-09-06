@@ -1,6 +1,12 @@
 import drag from '../src/drag.js';
 
 describe('drag', () => {
+  it('does not report a node move for a click without movement', () => {
+    const diagram = { notifyNodeMoved: jest.fn() };
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    drag(diagram).on('end').call(rect, {}, { id: 'n1', x: 10, y: 20 });
+    expect(diagram.notifyNodeMoved).not.toHaveBeenCalled();
+  });
   it('should notify about a node move only when dragging ends', () => {
     const diagram = {
       update: jest.fn(),

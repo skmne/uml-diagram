@@ -6,3 +6,4 @@ export default Diagram;
 
 // Also export as named export for flexibility
 export { Diagram };
+export { default as AddItemsOptions } from "./AddItemsOptions.js";
