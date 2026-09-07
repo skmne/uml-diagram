@@ -461,7 +461,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Changelog
 
-### Unreleased
+### 0.2.3
 - Add node alignment snapping with temporary edge/center guides, zoom-aware tolerance, and Alt bypass (`snapToNodes`, `snapThreshold`, `alignmentGuideColor`).
 - Make incident-link selection on class clicks opt-in with the instance option `highlightIncidentLinksOnClick` (default `false`); enable it explicitly in basic usage.
 - Support click selection and Shift+click toggling of nodes and links.

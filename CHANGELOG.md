@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.3 - 2026-09-07
 
 - Snap dragged nodes to other nodes' edges/centers with temporary alignment guides. Configure `snapToNodes` (default `true`), `snapThreshold` (default 6 screen pixels) and `alignmentGuideColor`; hold Alt to bypass snapping.
 - Keep alignment guides out of SVG exports and preserve highlighting while dragging; emit final snapped coordinates through the existing movement events.
