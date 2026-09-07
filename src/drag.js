@@ -1,15 +1,13 @@
 import { drag as d3Drag } from "d3-drag";
 import { select } from "d3-selection";
 
-export default function drag(diagram) {
+export default function drag(diagram, alignment) {
 	const moved = new WeakSet();
 	function dragged(event, d) {
-		const mouseX = event.x;
-		const mouseY = event.y;
+		const position = alignment ? alignment.move(d, event.x, event.y, event.sourceEvent?.altKey) : event;
+		const mouseX = position.x;
+		const mouseY = position.y;
 		if (mouseX !== d.x || mouseY !== d.y) moved.add(this);
-
-		// const offsetX = mouseX - d.x;
-		// const offsetY = mouseY - d.y;
 
 		select(this.parentNode)
 			.raise()
@@ -20,6 +18,7 @@ export default function drag(diagram) {
 	}
 
 	function dragended(event, d) {
+		alignment?.clear();
 		if (moved.delete(this)) diagram.notifyNodeMoved(d);
 	}
 

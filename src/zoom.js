@@ -5,7 +5,7 @@ export default class Zoom {
 	#height;
 	#zoom;
 	#svg;
-	constructor(svg, width, height) {
+	constructor(svg, width, height, onZoom = () => {}) {
 		this.#svg = svg;
 		this.#width = width;
 		this.#height = height;
@@ -18,6 +18,7 @@ export default class Zoom {
 				return (!event.ctrlKey || event.type === "wheel") && !event.button;
 			})
 			.on("zoom", (e) => {
+				onZoom();
 				this.#svg.select("g").attr("transform", e.transform);
 			})
 			.on("start", () => {

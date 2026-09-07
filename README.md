@@ -78,10 +78,26 @@ An optional second argument configures interaction for this instance:
 ```javascript
 const diagram = new Diagram(svgElement, {
   highlightIncidentLinksOnClick: true, // Default: false
+  snapToNodes: true,                  // Default: true
+  snapThreshold: 6,                   // Screen pixels; default: 6
 });
 ```
 
 When enabled, clicking a class selects its incoming/outgoing links too. With the default `false`, a class click selects only that class. This flag does not affect direct link clicks, `setHighlight({ includeIncidentLinks: true })`, or `addItems(data, { highlight: true })`.
+
+### Alignment while dragging
+
+Nodes snap to other nodes' left/right/top/bottom edges and horizontal/vertical centers while dragging. Each axis independently chooses the nearest alignment within `snapThreshold` screen pixels, including when the SVG is zoomed or scaled. This works for nodes with different widths/heights; it does not move neighboring nodes or rearrange the diagram automatically.
+
+Dashed guides appear while snapped and disappear on release, when moving beyond the threshold, or when zooming/redrawing. Hold **Alt** while dragging to bypass snapping temporarily. The cursor's unsnapped coordinates are retained, so moving away releases the snap instead of accumulating position errors.
+
+Set `snapToNodes: false` in the constructor to keep free dragging. `snapThreshold` accepts a finite nonnegative number (default `6`). Customize guide colors with the style API, including CSS variables:
+
+```javascript
+diagram.setStyle({ alignmentGuideColor: 'var(--diagram-guide, #e11d8d)' });
+```
+
+The final snapped coordinates are normal node positions in `getData()`, `nodeMoved`, and `layoutChanged`; movement events still fire once at the end of the drag. Guides are temporary, do not intercept clicks, do not affect the export bounds, and never appear in exported SVG or data. Highlight selections are preserved throughout dragging. See `examples/basic-usage.html` to try this alongside highlighting.
 
 ### Methods
 
@@ -446,6 +462,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## Changelog
 
 ### Unreleased
+- Add node alignment snapping with temporary edge/center guides, zoom-aware tolerance, and Alt bypass (`snapToNodes`, `snapThreshold`, `alignmentGuideColor`).
 - Make incident-link selection on class clicks opt-in with the instance option `highlightIncidentLinksOnClick` (default `false`); enable it explicitly in basic usage.
 - Support click selection and Shift+click toggling of nodes and links.
 - Add optional `addItems(data, { highlight: true })` behavior and the `AddItemsOptions` settings class.

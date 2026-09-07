@@ -9,6 +9,7 @@ import Link from "./Link.js";
 import Node from "./Node.js";
 import Highlight, { highlightDefaults, linkKey } from "./Highlight.js";
 import AddItemsOptions from "./AddItemsOptions.js";
+import Alignment from "./Alignment.js";
 
 class Diagram {
 	static AddItemsOptions = AddItemsOptions;
@@ -21,6 +22,7 @@ class Diagram {
 	#svgElement;
 	#rootGroup;
 	#highlight;
+	#alignment;
 	#listeners = {
 		highlightChanged: new Set(),
 		layoutChanged: new Set(),
@@ -35,7 +37,8 @@ class Diagram {
 		state.width = this.#width;
 		state.height = this.#height;
 		this.#nodesBuilder = new NodesBuilder(this.#width);
-		this.#zoom = new Zoom(this.#svg, this.#width, this.#height);
+		this.#alignment = new Alignment(svgElement, options);
+		this.#zoom = new Zoom(this.#svg, this.#width, this.#height, () => this.#alignment.clear());
 		this.#highlight = new Highlight(svgElement, (reason) => {
 			this.#emit("highlightChanged", () => ({ ...this.getHighlight(), reason }));
 		}, options?.highlightIncidentLinksOnClick === true);
@@ -80,11 +83,12 @@ class Diagram {
 	}
 
 	recreateDiagram() {
+		this.#alignment.clear();
 		this.#highlight.restore();
 		this.#nodesBuilder.createNodes();
 		this.#nodesBuilder.setNodeContextMenu((event, node) => this.notifyNodeContextMenu(event, node));
 		this.#linksBuilder.createLinks();
-		this.#nodesBuilder.setDragRectangle(drag(this));
+		this.#nodesBuilder.setDragRectangle(drag(this, this.#alignment));
 		this.#highlight.set(this.getHighlight(), "removal");
 	}
 
@@ -144,6 +148,7 @@ class Diagram {
 	}
 
 	setStyle(style) {
+		if (style.alignmentGuideColor) state.style.alignmentGuideColor = style.alignmentGuideColor;
 		this.#highlight.restore();
 		for (const key of Object.keys(highlightDefaults)) {
 			if (Object.prototype.hasOwnProperty.call(style, key)) state.style[key] = style[key];
@@ -189,9 +194,10 @@ class Diagram {
 		if (this.#rootGroup) this.#rootGroup.remove();
 		const rootGroupContainer = this.#createGroupContainer(this.#svg);
 		this.#rootGroup = rootGroupContainer;
+		this.#alignment.setRoot(rootGroupContainer);
 		this.#nodesBuilder.build(rootGroupContainer);
 		this.#nodesBuilder.setNodeContextMenu((event, node) => this.notifyNodeContextMenu(event, node));
-		this.#nodesBuilder.setDragRectangle(drag(this));
+		this.#nodesBuilder.setDragRectangle(drag(this, this.#alignment));
 		this.#linksBuilder = new LinksBuilder();
 		this.#linksBuilder.build(rootGroupContainer);
 		this.#highlight.set(this.getHighlight(), "removal");
@@ -212,6 +218,7 @@ class Diagram {
 		style = style || {};
 		const clone = this.#svgElement.cloneNode(true);
 		this.#highlight.stripFromClone(clone);
+		clone.querySelectorAll("[data-uml-alignment-guides]").forEach((guide) => guide.remove());
 		const svg = select(clone);
 		const rootGroup = this.#getRootGroup();
 		let area = this.#getCurrentViewportArea();

@@ -31,7 +31,11 @@ function setSvgSize(svgElement, width, height) {
 // When using from npm: import Diagram from '@alesik/uml-diagram';
 // For this example, we use the UMD build:
 const Diagram = UMLDiagram;
-const diagram = new Diagram(svgElement, { highlightIncidentLinksOnClick: true });
+const diagram = new Diagram(svgElement, {
+	highlightIncidentLinksOnClick: true,
+	snapToNodes: true,
+	snapThreshold: 6,
+});
 export { diagram };
 const lastEventElement = document.getElementById("last-event");
 const stateOutputElement = document.getElementById("state-output");
@@ -50,6 +54,7 @@ diagram.setStyle({
 	highlightNodeFill: "var(--highlight-fill)",
 	highlightLinkColor: "var(--highlight-accent)",
 	highlightStrokeWidth: 3,
+	alignmentGuideColor: "var(--alignment-guide)",
 });
 
 // Load project data from separate data structure file

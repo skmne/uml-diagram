@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Snap dragged nodes to other nodes' edges/centers with temporary alignment guides. Configure `snapToNodes` (default `true`), `snapThreshold` (default 6 screen pixels) and `alignmentGuideColor`; hold Alt to bypass snapping.
+- Keep alignment guides out of SVG exports and preserve highlighting while dragging; emit final snapped coordinates through the existing movement events.
 - Add the instance option `highlightIncidentLinksOnClick` (default `false`) to include incoming/outgoing links when clicking a class; enable it explicitly in basic usage.
 - Select nodes/links by clicking; Shift+click toggles items in a mixed selection (`highlightChanged` reason `click`).
 - Add opt-in automatic highlighting through `addItems(data, { highlight: true })` or an `AddItemsOptions` instance.

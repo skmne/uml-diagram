@@ -13,6 +13,7 @@
 		:root {
 			--highlight-accent: #2563eb;
 			--highlight-fill: #dbeafe;
+			--alignment-guide: #db2777;
 			--vscode-editor-foreground: #0f0f0f;
 			--vscode-editor-background: #bfcace;
 			--vscode-button-foreground: #f7f8f8;
@@ -32,7 +33,7 @@
 		}
 
 		@media (prefers-color-scheme: dark) {
-			:root { --highlight-accent: #93c5fd; --highlight-fill: #1e3a5f; }
+			:root { --highlight-accent: #93c5fd; --highlight-fill: #1e3a5f; --alignment-guide: #f472b6; }
 		}
 		.highlight-panel {
 			position: fixed;
@@ -277,6 +278,7 @@
 			<select id="highlight-classes" multiple aria-describedby="highlight-help"></select>
 			<p id="highlight-help">Click a class to highlight it and its incoming/outgoing links. Shift+click adds or removes classes; Shift+click a link toggles it separately. Use + to add a highlighted dependency. Click empty canvas to clear. Drag, pan and zoom preserve highlighting.</p>
 			<output id="highlight-status" aria-live="polite">Nothing highlighted</output>
+			<p>Drag a class near another class's edge or center to align it. Pink guides show the alignment. Hold Alt while dragging to move freely.</p>
 		</aside>
 		<div id="container" style="width: calc(100% - 270px); margin-left: 270px; min-height: 100%">
 			<svg xmlns="http://www.w3.org/2000/svg" id="uml-diagram"></svg>
